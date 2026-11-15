@@ -5,119 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ben Thai — Robot Arm · MoveIt 2 Stack</title>
 <meta name="description" content="UR5e in Gazebo with ros2_control + MoveIt 2: kinematics, planning-scene collision objects, perception-driven pick-and-place capstone verified passing in simulation.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%238a5410'/%3E%3C/svg%3E">
-<style>
-  :root{
-    --ink:#1c1b19; --ink2:#4a4845; --ink3:#7a7772;
-    --line:#e3e1dc; --line2:#d0cdc7; --bg:#fdfcfa; --panel:#ffffff; --wash:#f6f5f1;
-    --blue:#1f5f8b; --bluew:#eaf2f8; --teal:#0f6e56; --tealw:#e6f4ef;
-    --amber:#8a5410; --amberw:#faf1e2; --coral:#9c3b1e; --coralw:#fbeee9;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:var(--amber);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 90px}
-
-  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
-    background:rgba(253,252,250,.92);border-bottom:1px solid var(--line)}
-  nav .inner{max-width:1180px;margin:0 auto;padding:0 28px;height:50px;
-    display:flex;align-items:center;gap:20px}
-  .brand{font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
-  .brand span{color:var(--amber)}
-  nav .links{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
-  nav .links a{color:var(--ink2);font-size:12.5px}
-  nav .links a:hover{color:var(--amber);text-decoration:underline}
-  nav a.back{color:var(--ink2);font-size:12.5px;white-space:nowrap}
-  nav a.back:hover{color:var(--amber)}
-
-  header.top{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:24px}
-  .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
-  h1{font-size:30px;line-height:1.25;margin:12px 0 10px;font-weight:700;letter-spacing:-.01em}
-  .sub{font-size:15px;color:var(--ink2);margin:0;max-width:860px}
-
-  h2{font-size:19px;font-weight:700;margin:44px 0 8px;padding-top:8px;
-    border-top:1px solid var(--line);scroll-margin-top:70px}
-  h2.first{margin-top:32px;border-top:0;padding-top:0}
-  .lead{font-size:13.5px;color:var(--ink2);margin:0 0 14px;max-width:900px}
-  .lead strong{color:var(--ink)}
-
-  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
-    border:1px solid var(--line2);border-radius:999px;padding:5px 12px;background:var(--panel)}
-  .badge b{color:var(--ink)}
-  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px}
-
-  figure{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    padding:14px;margin:16px 0}
-  figure img{display:block;width:100%;border-radius:5px;background:#101216}
-  figcaption{font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
-
-  .video-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    overflow:hidden;margin-top:18px}
-  .video-card video{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#101216}
-  .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
-
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
-  .card .n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--amber);font-weight:700}
-  .card h3{font-size:14.5px;margin:7px 0;font-weight:700}
-  .card p{font-size:13px;color:var(--ink2);margin:0}
-
-  .scope{background:var(--amberw);border:1px solid #e8d8b8;border-left:3px solid var(--amber);
-    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:18px 0 0}
-  .scope strong{color:var(--ink)}
-
-  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
-  .cols{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
-  footer .fine{margin-top:16px;font-size:11.5px;font-family:var(--mono);line-height:1.7}
-  @media(max-width:860px){
-    nav .links{display:none}
-    .grid3{grid-template-columns:1fr}
-  }
-
-  /* capability-first proof strip — design refresh 2026-11-15 */
-  .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 8px}
-  .proof .p{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px}
-  .proof .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
-  .proof .l{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.4}
-  .proof .e{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:.06em}
-  .proof .c-blue .n{color:var(--blue)} .proof .c-coral .n{color:var(--coral)}
-  .proof .c-teal .n{color:var(--teal)} .proof .c-amber .n{color:var(--amber)}
-  @media(max-width:860px){.proof{grid-template-columns:repeat(2,1fr)}}
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a class="back" href="../">← All projects</a>
-    <div class="brand">ROBOT&nbsp;<span>ARM</span></div>
-    <div class="links">
-      <a href="#perception">Perception</a><a href="#stack">Stack</a>
-      <a href="#mission">Mission</a><a href="../motion-retargeting/">Next project →</a>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="../">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Robot arm
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="#perception">Perception</a>
+    <a href="#stack">Stack</a>
+    <a href="#mission">Mission</a>
+    <a href="../motion-retargeting/">Next →</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="#perception">Perception</a>
+  <a href="#stack">The stack</a>
+  <a href="#mission">Capstone mission</a>
+  <a href="../motion-retargeting/">Next project →</a>
+</div>
+
+<section class="hero hero--stage">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/hero_arm.jpg">
+      <source src="../assets/video/hero_arm.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">04 / Simulation · UR5e · Gazebo</p>
+    <h1 class="hero__title">A robot arm that sees, plans and grasps.</h1>
+    <p class="hero__desc">UR5e in Gazebo with ros2_control + MoveIt 2 — the pick target comes from the camera, not a hardcoded pose.</p>
+    <div class="hero__result">
+      <span class="n">6/6</span>
+      <span class="l">capstone stages passed · 92 s one-take mission</span>
+      <span class="e">Observed</span>
     </div>
   </div>
-</nav>
+  <a class="hero__cta" href="#mission">Watch the mission
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
 
 <div class="wrap">
 
-<header class="top">
-  <div class="kicker">ROS 2 · Gazebo · UR5e</div>
-  <h1>A robot arm that sees, plans and grasps.</h1>
-  <p class="sub">UR5e in Gazebo with ros2_control + MoveIt 2 — a perception-driven pick-and-place capstone, verified passing.</p>
-</header>
-  <div class="proof">
-    <div class="p c-amber"><div class="n">6/6</div><div class="l">capstone stages passed</div><div class="e">OBSERVED</div></div>
-    <div class="p c-amber"><div class="n">92 s</div><div class="l">full mission, one take</div><div class="e">OBSERVED</div></div>
-    <div class="p c-amber"><div class="n">1</div><div class="l">camera-derived grasp target, never hardcoded</div><div class="e">OBSERVED</div></div>
-    <div class="p c-amber"><div class="n">PASS</div><div class="l">verdict recorded in the clip</div><div class="e">OBSERVED</div></div>
-  </div>
+<div class="legend">
+  <span class="badge"><b>6/6</b> capstone stages passed <span class="ev">Observed</span></span>
+  <span class="badge"><b>92 s</b> full mission, one take <span class="ev">Observed</span></span>
+  <span class="badge"><b>1</b> camera-derived grasp target, never hardcoded <span class="ev">Observed</span></span>
+  <span class="badge"><b>PASS</b> verdict recorded in the clip <span class="ev">Observed</span></span>
+</div>
 
 <h2 id="perception" class="first">Camera → detection → mask → collision object</h2>
 <p class="lead">The capstone's perception stage: a Gazebo camera frame, the detected target's
@@ -130,7 +77,7 @@ and grasps.</p>
 </figure>
 
 <h2 id="stack">The stack</h2>
-<div class="grid3">
+<div class="grid2">
   <div class="card"><div class="n">01</div><h3>Kinematics</h3>
     <p>Forward/inverse kinematics on the UR5e — joints driven through ros2_control, poses verified
     against the planner.</p></div>
@@ -148,14 +95,21 @@ and grasps.</p>
 <p class="lead"><strong>One take of the full sense → plan → grasp → place cycle</strong>, with the grasp target arriving from the camera.</p>
 <div class="video-card">
   <video autoplay muted playsinline loop controls preload="none" poster="../assets/poster/ur5e_pick_place.jpg">
-    <source src="../assets/video/ur5e_pick_place.mp4" type="video/mp4"></video>
+    <source src="../assets/video/ur5e_pick_place.mp4" type="video/mp4">
+  </video>
   <div class="cap"><span>ur5e_pick_place.mp4 · 92 s · 1.5× · title card → mission → verdict</span>
     <span>i05 VERDICT: PASS · 6/6 stages</span></div>
 </div>
 
 <div class="scope">
-  <strong>Honest scope.</strong> Simulation only — no real arm in the loop for this stack. The
-  perception figure is from the live capstone run inside Gazebo.
+  <h3>Honest scope — what this is NOT</h3>
+  <p><strong>Simulation only</strong> — no real arm in the loop for this stack. The perception
+  figure is from the live capstone run inside Gazebo.</p>
+</div>
+
+<div class="pager">
+  <a href="../mobile-robot/"><small>← Previous project</small>RGB-D SLAM &amp; navigation</a>
+  <a href="../motion-retargeting/"><small>Next project →</small>Motion retargeting</a>
 </div>
 
 <footer>
@@ -164,27 +118,30 @@ and grasps.</p>
     <div><a href="../">← All projects</a> · <a href="../motion-retargeting/">Next: motion retargeting →</a></div>
   </div>
   <p class="fine">UR5e · ros2_control · MoveIt 2 · Gazebo · YOLO-segmentation perception</p>
-  </footer>
+</footer>
 
 </div>
-<script>
-(function(){
-  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var vids = document.querySelectorAll('video[loop][muted]');
-  function playInView(){
-    vids.forEach(function(v){
-      var r = v.getBoundingClientRect();
-      var inView = r.top < innerHeight * 0.9 && r.bottom > innerHeight * 0.1;
-      if(inView && !reduced){ if(v.paused){ v.play().catch(function(){}); } }
-      else if(!inView && !v.paused){ v.pause(); }
-    });
-  }
-  var vio = new IntersectionObserver(function(){ playInView(); },{threshold:.35});
-  vids.forEach(function(v){ vio.observe(v); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ playInView(); } });
-  window.addEventListener('pageshow', playInView);
-  setInterval(playInView, 2500);
-})();
-</script>
+
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
 </body>
 </html>

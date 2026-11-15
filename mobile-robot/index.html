@@ -5,151 +5,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ben Thai — RGB-D SLAM &amp; Navigation on a Real Robot</title>
 <meta name="description" content="RTAB-Map RGB-D SLAM live on a Kobuki base (Jetson Xavier NX, RealSense D435, RPLiDAR A3): loop closures, pose-graph optimization, Nav2 navigation, guarded drives.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%230f6e56'/%3E%3C/svg%3E">
-<style>
-  :root{
-    --ink:#1c1b19; --ink2:#4a4845; --ink3:#7a7772;
-    --line:#e3e1dc; --line2:#d0cdc7; --bg:#fdfcfa; --panel:#ffffff; --wash:#f6f5f1;
-    --blue:#1f5f8b; --bluew:#eaf2f8; --teal:#0f6e56; --tealw:#e6f4ef;
-    --amber:#8a5410; --amberw:#faf1e2; --coral:#9c3b1e; --coralw:#fbeee9;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:var(--teal);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 90px}
-
-  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
-    background:rgba(253,252,250,.92);border-bottom:1px solid var(--line)}
-  nav .inner{max-width:1180px;margin:0 auto;padding:0 28px;height:50px;
-    display:flex;align-items:center;gap:20px}
-  .brand{font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
-  .brand span{color:var(--teal)}
-  nav .links{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
-  nav .links a{color:var(--ink2);font-size:12.5px}
-  nav .links a:hover{color:var(--teal);text-decoration:underline}
-  nav a.back{color:var(--ink2);font-size:12.5px;white-space:nowrap}
-  nav a.back:hover{color:var(--teal)}
-
-  header.top{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:24px}
-  .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
-  h1{font-size:30px;line-height:1.25;margin:12px 0 10px;font-weight:700;letter-spacing:-.01em}
-  .sub{font-size:15px;color:var(--ink2);margin:0;max-width:860px}
-  .meta{margin-top:14px;font-size:12.5px;color:var(--ink3)}
-  .meta b{color:var(--ink2)}
-
-  h2{font-size:19px;font-weight:700;margin:44px 0 8px;padding-top:8px;
-    border-top:1px solid var(--line);scroll-margin-top:70px}
-  h2.first{margin-top:32px;border-top:0;padding-top:0}
-  .lead{font-size:13.5px;color:var(--ink2);margin:0 0 14px;max-width:900px}
-  .lead strong{color:var(--ink)}
-
-  .note{background:var(--wash);border:1px solid var(--line);border-left:3px solid var(--teal);
-    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:16px 0}
-  .note strong{color:var(--ink)}
-  .ev{font-size:10.5px;letter-spacing:.06em;font-weight:700;padding:2px 6px;border-radius:3px;
-    border:1px solid var(--line2);color:var(--ink3);background:var(--wash);vertical-align:middle}
-
-  .video-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    overflow:hidden;margin-top:18px}
-  .video-card video{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#101216}
-  .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
-
-  .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-  .statcard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
-  .statcard .big{font-size:26px;font-weight:700;letter-spacing:-.01em;color:var(--teal);
-    font-family:var(--mono)}
-  .statcard .big small{font-size:14px;color:var(--ink3);font-weight:600}
-  .statcard .lab{font-size:12.5px;color:var(--ink2);margin-top:4px}
-
-  figure{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    padding:14px;margin:16px 0}
-  figure img{display:block;width:100%;border-radius:5px;background:#101216}
-  figure.map img{object-fit:contain;aspect-ratio:auto}
-  figcaption{font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .grid2 figure{margin:16px 0 0}
-
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
-  .card .n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--teal);font-weight:700}
-  .card h3{font-size:14.5px;margin:7px 0;font-weight:700}
-  .card p{font-size:13px;color:var(--ink2);margin:0}
-
-  .scope{background:var(--amberw);border:1px solid #e8d8b8;border-left:3px solid var(--amber);
-    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:18px 0 0}
-  .scope strong{color:var(--ink)}
-
-  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
-  .cols{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
-  footer .fine{margin-top:16px;font-size:11.5px;font-family:var(--mono);line-height:1.7}
-  @media(max-width:860px){
-    nav .links{display:none}
-    .statgrid,.grid2{grid-template-columns:1fr}
-  }
-
-  /* capability-first proof strip — design refresh 2026-11-15 */
-  .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 8px}
-  .proof .p{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px}
-  .proof .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
-  .proof .l{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.4}
-  .proof .e{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:.06em}
-  .proof .c-blue .n{color:var(--blue)} .proof .c-coral .n{color:var(--coral)}
-  .proof .c-teal .n{color:var(--teal)} .proof .c-amber .n{color:var(--amber)}
-  @media(max-width:860px){.proof{grid-template-columns:repeat(2,1fr)}}
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a class="back" href="../">← All projects</a>
-    <div class="brand">MOBILE&nbsp;<span>ROBOT</span></div>
-    <div class="links">
-      <a href="#video">Video</a><a href="#numbers">Numbers</a><a href="#map">Map</a>
-      <a href="#cloud">Cloud</a><a href="#gazebo">Gazebo twin</a>
-      <a href="../robot-arm/">Next project →</a>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="../">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Mobile robot
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="#map">Map</a>
+    <a href="#cloud">Cloud</a>
+    <a href="#numbers">Numbers</a>
+    <a href="../robot-arm/">Next →</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="#video">The 3-D map</a>
+  <a href="#numbers">Numbers</a>
+  <a href="#map">Occupancy grid</a>
+  <a href="#cloud">Fused cloud</a>
+  <a href="#sim">Gazebo twin</a>
+  <a href="../robot-arm/">Next project →</a>
+</div>
+
+<section class="hero hero--stage">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/hero_cloud.jpg">
+      <source src="../assets/video/hero_cloud.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">03 / Real hardware · Kobuki base · RTAB-Map</p>
+    <h1 class="hero__title">The robot builds its own map.</h1>
+    <p class="hero__desc">RGB-D SLAM closes loops on the robot, then Nav2 drives to goals on the map it just made — live on hardware.</p>
+    <div class="hero__result">
+      <span class="n">7.1 cm</span>
+      <span class="l">Nav2 goal error · 174 accepted loop closures</span>
+      <span class="e">Observed</span>
     </div>
   </div>
-</nav>
+  <a class="hero__cta" href="#numbers">See the results
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
 
 <div class="wrap">
 
-<header class="top">
-  <div class="kicker">ROS 2 · real hardware · Kobuki + RealSense D435 + RPLiDAR A3</div>
-  <h1>RGB-D SLAM &amp; navigation, live on a real robot.</h1>
-  <p class="sub">RTAB-Map RGB-D SLAM running on-robot, closing loops, and navigating with Nav2 — live on a Kobuki base.</p>
-  <p class="meta"><b>4,893 + 4,041 keyframes</b> · <b>17 + 174</b> closure links · final-drive grid
-  <b>10.1 × 9.7 m</b> · Nav2 goal error <b>7.1 cm</b></p>
-</header>
-  <div class="proof">
-    <div class="p c-teal"><div class="n">174</div><div class="l">accepted loop closures</div><div class="e">OBSERVED</div></div>
-    <div class="p c-teal"><div class="n">7.1 cm</div><div class="l">Nav2 goal error</div><div class="e">OBSERVED</div></div>
-    <div class="p c-teal"><div class="n">10.1 × 9.7 m</div><div class="l">mapped occupancy grid</div><div class="e">OBSERVED</div></div>
-    <div class="p c-amber"><div class="n">0</div><div class="l">collisions across 3 guarded drives</div><div class="e">OBSERVED</div></div>
-  </div>
+<div class="legend">
+  <span class="badge"><b>174</b> accepted loop closures <span class="ev">Observed</span></span>
+  <span class="badge"><b>7.1 cm</b> Nav2 goal error <span class="ev">Observed</span></span>
+  <span class="badge"><b>10.1 × 9.7 m</b> mapped occupancy grid <span class="ev">Observed</span></span>
+  <span class="badge"><b>0</b> collisions across 3 guarded drives <span class="ev">Observed</span></span>
+</div>
 
-<h2 id="video" class="first">The final mapped map — in 3-D</h2>
-<p class="lead"><strong>47 seconds of the finished map</strong> — a fused RGB-D point cloud with real camera colours.</p>
-<div class="video-card">
-  <video controls preload="metadata" poster="../assets/poster/p08_slam.jpg">
-    <source src="../assets/video/p08_slam_showcase.mp4" type="video/mp4"></video>
-  <div class="cap"><span>p08_slam_showcase.mp4 · 47 s · fused RGB-D cloud</span></div>
+<h2 id="video" class="first">The finished map — in 3-D</h2>
+<p class="lead"><strong>A fused RGB-D point cloud with real camera colours</strong> — the map the robot navigated on, turning in 3-D.</p>
+<div class="reel">
+  <video autoplay muted playsinline loop preload="metadata" poster="../assets/poster/cloud_full.jpg">
+    <source src="../assets/video/cloud_full.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>25 s clean loop · fused RGB-D cloud, real camera colours</span>
+    <a href="../assets/video/p08_slam_showcase.mp4" download>full 47 s showcase ↓</a></div>
 </div>
 
 <h2 id="numbers">Numbers</h2>
+<p class="lead">Read from the RTAB-Map pose-graph database and the final Nav2 run <span class="ev">Observed</span>.</p>
 <div class="statgrid">
   <div class="statcard"><div class="big">4,041 <small>keyframes</small></div>
     <div class="lab">final live session (a second session added 4,893 more)</div></div>
   <div class="statcard"><div class="big">174 <small>closure links</small></div>
     <div class="lab">accepted global loop closures, final session — 17 in the second
-    <span class="ev">OBSERVED</span> from the pose-graph db</div></div>
+    <span class="ev">Observed</span> from the pose-graph db</div></div>
   <div class="statcard"><div class="big">0.75 m</div>
     <div class="lab">wheel-odometry drift corrected by pose-graph optimization</div></div>
   <div class="statcard"><div class="big">10.1 × 9.7 m</div>
@@ -181,7 +117,7 @@ The spur at lower right was mapped by a targeted corridor drive.</p>
   </figure>
 </div>
 
-<h2 id="gazebo">The Gazebo twin — full Nav2 in simulation</h2>
+<h2 id="sim">The Gazebo twin — full Nav2 in simulation</h2>
 <p class="lead">The ROS 2 Jazzy Gazebo track that mirrors this project's pipeline without
 hardware: the saved SLAM map loaded into <strong>map_server + AMCL</strong>, then
 <strong>Nav2</strong> driving five waypoints through the pillar-field corridors. On screen:
@@ -190,15 +126,23 @@ the live goal feedback — <strong>5/5 waypoints reached</strong>, same concepts
 robot, reproducible by anyone with the repo.</p>
 <div class="video-card">
   <video autoplay muted playsinline loop controls preload="none" poster="../assets/poster/nav2_waypoints.jpg">
-    <source src="../assets/video/nav2_waypoints.mp4" type="video/mp4"></video>
+    <source src="../assets/video/nav2_waypoints.mp4" type="video/mp4">
+  </video>
   <div class="cap"><span>nav2_waypoints.mp4 · 120 s · 1.5× · title card → mission → result</span>
     <span><span class="ev">SIM</span> mission summary: 5/5 SUCCEEDED</span></div>
 </div>
 
 <div class="scope">
-  <strong>Honest scope.</strong> Numbers are read from the RTAB-Map pose-graph database, not
-  eyeballed. Drives after the guard rework (front scan-stop, flank guard, rotation envelope,
-  bumper + cliff abort): <strong>0 collisions across 3 runs</strong>.
+  <h3>Honest scope — what this is NOT</h3>
+  <p>Numbers are read from the RTAB-Map pose-graph database, not eyeballed —
+  <strong>0 collisions across 3 guarded drives</strong>. The map, cloud and Nav2 goal error
+  above are from <strong>real hardware</strong>; the waypoint mission is a
+  <strong>Gazebo simulation</strong> twin of the same pipeline, not hardware.</p>
+</div>
+
+<div class="pager">
+  <a href="../motion-physics/"><small>← Previous project</small>Motion + physics</a>
+  <a href="../robot-arm/"><small>Next project →</small>Robot-arm manipulation</a>
 </div>
 
 <footer>
@@ -208,27 +152,30 @@ robot, reproducible by anyone with the repo.</p>
   </div>
   <p class="fine">RTAB-Map 0.21.1 · ROS 2 Foxy · Jetson Xavier NX · RealSense D435 (RGB-D,
   colour-aligned) · RPLiDAR A3 · Nav2 · matching Gazebo track on ROS 2 Jazzy</p>
-  </footer>
+</footer>
 
 </div>
-<script>
-(function(){
-  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var vids = document.querySelectorAll('video[loop][muted]');
-  function playInView(){
-    vids.forEach(function(v){
-      var r = v.getBoundingClientRect();
-      var inView = r.top < innerHeight * 0.9 && r.bottom > innerHeight * 0.1;
-      if(inView && !reduced){ if(v.paused){ v.play().catch(function(){}); } }
-      else if(!inView && !v.paused){ v.pause(); }
-    });
-  }
-  var vio = new IntersectionObserver(function(){ playInView(); },{threshold:.35});
-  vids.forEach(function(v){ vio.observe(v); });
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ playInView(); } });
-  window.addEventListener('pageshow', playInView);
-  setInterval(playInView, 2500);
-})();
-</script>
+
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
 </body>
 </html>

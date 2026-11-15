@@ -7,7 +7,9 @@
 #   plots  : per-clip tracking-error PNG, copied       -> assets/plots/
 #
 # Both stages are handled: <clip>.mp4 (Stage 1 IK) and <clip>_gmr.mp4 (Stage 2),
-# plus the Stage 3 physics-tracking assets from projects/g1-physics-tracking.
+# plus the Stage 3 physics-tracking assets from projects/g1-physics-tracking,
+# the two sim-demo captures, and three clean Figure-style hero loops derived
+# from those assets (title/footer cards cut so the first frame is footage).
 set -euo pipefail
 
 SRC="$(cd "$HOME/ben_robotics/projects/humanoid-motion-retargeting/output" && pwd)"
@@ -131,6 +133,49 @@ done <<'SIMDEMOS'
 ur5e_moveit_pick_place_sim.mp4 ur5e_pick_place 0.45
 turtlebot3_nav2_waypoints_sim.mp4 nav2_waypoints 0.50
 SIMDEMOS
+
+# --- Figure-style hero loops (clean, title-card-free) ------------------------
+# Short muted loops for the opening hero and the project hero sections. Each is
+# cut from an asset already produced above (or from the P0.8 showcase capture)
+# so the burned-in title / footer cards never appear on screen.
+hero() { # hero <in> <base> <start> <dur> <poster-t> [vf] [crf]
+  local in="$1" base="$2" ss="$3" dur="$4" pt="$5" vf="${6:-}" crf="${7:-24}"
+  [ -s "$in" ] || { echo "MISSING hero source $in" >&2; return 0; }
+  if [ ! -s "$A/video/$base.mp4" ]; then
+    if [ -n "$vf" ]; then
+      ffmpeg -y -v error -nostdin -ss "$ss" -t "$dur" -i "$in" -vf "$vf" \
+        -c:v libx264 -preset medium -crf "$crf" -an -movflags +faststart \
+        "$A/video/$base.mp4"
+    else
+      ffmpeg -y -v error -nostdin -ss "$ss" -t "$dur" -i "$in" \
+        -c:v libx264 -preset medium -crf "$crf" -an -movflags +faststart \
+        "$A/video/$base.mp4"
+    fi
+    echo "hero video: $base ($(du -h "$A/video/$base.mp4" | cut -f1))"
+  fi
+  if [ ! -s "$A/poster/$base.jpg" ]; then
+    ffmpeg -y -v error -nostdin -ss "$pt" -i "$A/video/$base.mp4" \
+      -frames:v 1 -q:v 3 "$A/poster/$base.jpg"
+    echo "hero poster: $base"
+  fi
+}
+
+P08="$(cd "$HOME/ben_robotics/model-validation/turtlebot3-p02/video" 2>/dev/null && pwd || true)"
+if [ -n "$P08" ] && [ -s "$P08/p08_slam_showcase.mp4" ] && \
+   [ ! -s "$A/video/p08_slam_showcase.mp4" ]; then
+  cp -f "$P08/p08_slam_showcase.mp4" "$A/video/p08_slam_showcase.mp4"
+fi
+# P0.8 showcase carries a title card and a persistent footer caption: crop the
+# middle 560 px band and pad it back to 1280x720 so only the cloud shows.
+hero "$A/video/p08_slam_showcase.mp4" hero_cloud 10 16 5 \
+  "crop=1280:560:0:88,pad=1280:720:0:88:black" 27
+# Longer clean cut for the mobile-robot detail page (same crop, no title cards).
+hero "$A/video/p08_slam_showcase.mp4" cloud_full 10 25 8 \
+  "crop=1280:560:0:88,pad=1280:720:0:88:black" 24
+# Split IK-vs-GMR reel: skip the 4 s title card, keep the comparison footage.
+hero "$A/video/reel.mp4" hero_retarget 4 40 6
+# UR5e capstone: skip the 4 s title card, keep the sense-plan-grasp-place run.
+hero "$A/video/ur5e_pick_place.mp4" hero_arm 4 60 20
 
 echo "--- totals ---"
 du -sh "$A/video" "$A/poster" "$A/plots"

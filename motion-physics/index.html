@@ -5,140 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ben Thai — Motion Retargeting + Physics Tracking</title>
 <meta name="description" content="Retargeted G1 trajectories from two pipelines tracked in MuJoCo under explicit torque PD — 46.6 s, never falls.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%239c3b1e'/%3E%3C/svg%3E">
-<style>
-  :root{
-    --ink:#1c1b19; --ink2:#4a4845; --ink3:#7a7772;
-    --line:#e3e1dc; --line2:#d0cdc7; --bg:#fdfcfa; --panel:#ffffff; --wash:#f6f5f1;
-    --blue:#1f5f8b; --bluew:#eaf2f8; --teal:#0f6e56; --tealw:#e6f4ef;
-    --amber:#8a5410; --amberw:#faf1e2; --coral:#9c3b1e; --coralw:#fbeee9;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:var(--blue);text-decoration:none}
-  a:hover{text-decoration:underline}
-  code{background:var(--wash);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
-    font-family:var(--mono);font-size:12px}
-  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 90px}
-
-  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
-    background:rgba(253,252,250,.92);border-bottom:1px solid var(--line)}
-  nav .inner{max-width:1180px;margin:0 auto;padding:0 28px;height:50px;
-    display:flex;align-items:center;gap:20px}
-  .brand{font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
-  .brand span{color:var(--coral)}
-  nav .links{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
-  nav .links a{color:var(--ink2);font-size:12.5px}
-  nav .links a:hover{color:var(--coral);text-decoration:underline}
-  nav a.back{color:var(--ink2);font-size:12.5px;white-space:nowrap}
-  nav a.back:hover{color:var(--coral)}
-
-  header.top{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:24px}
-  .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
-  h1{font-size:30px;line-height:1.25;margin:12px 0 10px;font-weight:700;letter-spacing:-.01em}
-  .sub{font-size:15px;color:var(--ink2);margin:0;max-width:860px}
-  .meta{margin-top:14px;font-size:12.5px;color:var(--ink3)}
-  .meta b{color:var(--ink2)}
-
-  h2{font-size:19px;font-weight:700;margin:44px 0 8px;padding-top:8px;
-    border-top:1px solid var(--line);scroll-margin-top:70px}
-  h2.first{margin-top:32px;border-top:0;padding-top:0}
-  .lead{font-size:13.5px;color:var(--ink2);margin:0 0 14px;max-width:900px}
-  .lead strong{color:var(--ink)}
-
-  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px}
-  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
-    border:1px solid var(--line2);border-radius:999px;padding:5px 12px;background:var(--panel)}
-  .badge b{color:var(--ink)}
-  .ev{font-size:10.5px;letter-spacing:.06em;font-weight:700;padding:2px 6px;border-radius:3px;
-    border:1px solid var(--line2);color:var(--ink3);background:var(--wash);vertical-align:middle}
-
-  .reel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:14px}
-  .reel video{width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:5px;background:#111;display:block}
-  .reel.sbs video{aspect-ratio:32/9}
-  .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
-
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
-  .card .n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--coral);font-weight:700}
-  .card h3{font-size:14.5px;margin:7px 0 7px;font-weight:700}
-  .card p{font-size:13px;color:var(--ink2);margin:0}
-  .card video{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#111;
-    border-radius:5px;margin-bottom:12px;border:1px solid var(--line)}
-  .card video.sbs{aspect-ratio:32/9}
-  .caution{background:var(--amberw);border:1px solid #e8d8b8;border-left:3px solid var(--amber);
-    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:16px 0}
-  .caution strong{color:var(--ink)}
-  .scope{background:var(--coralw);border:1px solid #efd6cd;border-left:3px solid var(--coral);
-    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:18px 0 0}
-  .scope h3{font-size:14.5px;color:var(--coral);margin:0 0 6px}
-  .scope p{margin:0}
-
-  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
-  .cols{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
-  footer .fine{font-size:11.5px;font-family:var(--mono);line-height:1.7}
-  @media(max-width:860px){
-    nav .links{display:none}
-    .grid3,.grid2{grid-template-columns:1fr}
-  }
-
-  /* capability-first proof strip — design refresh 2026-11-15 */
-  .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 8px}
-  .proof .p{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px}
-  .proof .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
-  .proof .l{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.4}
-  .proof .e{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:.06em}
-  .proof .c-blue .n{color:var(--blue)} .proof .c-coral .n{color:var(--coral)}
-  .proof .c-teal .n{color:var(--teal)} .proof .c-amber .n{color:var(--amber)}
-  @media(max-width:860px){.proof{grid-template-columns:repeat(2,1fr)}}
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a class="back" href="../">← All projects</a>
-    <div class="brand">RETARGETING&nbsp;<span>+ PHYSICS</span></div>
-    <div class="links">
-      <a href="#stack">Stack</a><a href="#results">Results</a><a href="#live">Live</a>
-      <a href="../mobile-robot/">Next project →</a>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="../">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Motion + physics
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="#stack">Stack</a>
+    <a href="#results">Results</a>
+    <a href="#live">Live</a>
+    <a href="../mobile-robot/">Next →</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="#stack">Stack</a>
+  <a href="#results">Results</a>
+  <a href="#live">Live</a>
+  <a href="../mobile-robot/">Next project →</a>
+</div>
+
+<section class="hero hero--stage">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/track_box_gmr.jpg">
+      <source src="../assets/video/track_box_gmr.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">02 / Simulation · MuJoCo</p>
+    <h1 class="hero__title">Retargeted motion, executed by physics.</h1>
+    <p class="hero__desc">Retargeted human motion executed on a 29-DoF G1 by explicit torque PD on every joint.</p>
+    <div class="hero__result">
+      <span class="n">46.6 s</span>
+      <span class="l">1399/1399 frames · never falls</span>
+      <span class="e">Observed</span>
     </div>
   </div>
-</nav>
+  <a class="hero__cta" href="#results">See the results
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
 
 <div class="wrap">
-
-<header class="top">
-  <div class="kicker">CMU mocap → Unitree G1 · MuJoCo sim</div>
-  <h1>Retargeted motion, executed by physics.</h1>
-  <p class="sub">Retargeted human motion, executed on a 29-DoF G1 in MuJoCo by explicit torque PD on every joint.</p>
-  <p class="meta"><b>torque PD · all 29 joints</b> · <b>46.6 s</b> tracked, never falls ·
-  joint RMSE <b>0.150 rad</b> (IK ref) / <b>0.245 rad</b> (GMR ref) · free base topples in <b>0.43 s</b></p>
-</header>
-  <div class="proof">
-    <div class="p c-coral"><div class="n">46.6 s</div><div class="l">tracked, never falls</div><div class="e">OBSERVED</div></div>
-    <div class="p c-coral"><div class="n">1399/1399</div><div class="l">frames of the full box run</div><div class="e">OBSERVED</div></div>
-    <div class="p c-blue"><div class="n">0.150 rad</div><div class="l">joint RMSE mean (IK reference)</div><div class="e">OBSERVED</div></div>
-    <div class="p c-amber"><div class="n">0.43 s</div><div class="l">free-base topple — reported, not hidden</div><div class="e">OBSERVED</div></div>
-  </div>
 
 <h2 id="stack" class="first">The stack</h2>
 <p class="lead">Three steps, no controller between them and the robot.</p>
 <div class="grid3">
-  <div class="card"><div class="n">1 · RETARGET</div><h3>BVH → G1, two pipelines</h3>
+  <div class="card"><div class="n">1 · Retarget</div><h3>BVH → G1, two pipelines</h3>
     <p>CMU Graphics Lab clips retargeted onto the G1 by per-frame bounded differential IK
     (Pinocchio) and by GMR (Araújo et al., ICRA 2026 — external open-source work).</p></div>
-  <div class="card"><div class="n">2 · TRACK</div><h3>Torque PD in MuJoCo</h3>
+  <div class="card"><div class="n">2 · Track</div><h3>Torque PD in MuJoCo</h3>
     <p><code>tau = kp·(q★−q) + kd·(q̇★−q̇) + gravcomp</code> with kp=300, kd=8, on
     <b>all 29 joints</b>. Pure joint torques — nothing else drives a joint.</p></div>
-  <div class="card"><div class="n">3 · HONEST BASE</div><h3>The pelvis is unactuated</h3>
+  <div class="card"><div class="n">3 · Honest base</div><h3>The pelvis is unactuated</h3>
     <p>A soft workspace PD stands in for a balance controller. With the base fully free, the same
     joint PD tracks at <b>0.045 rad</b> and still topples in <b>0.43 s</b>.</p></div>
 </div>
@@ -147,12 +77,21 @@
 <p class="lead"><strong>Left: the retargeted reference. Right: that same trajectory executed by MuJoCo physics.</strong></p>
 
 <div class="reel sbs">
-  <video id="herovideo" muted loop playsinline preload="metadata"
+  <video id="herovideo" muted loop playsinline controls preload="metadata"
     poster="../assets/poster/track_box_full.jpg">
     <source src="../assets/video/track_box_full.mp4" type="video/mp4">
   </video>
   <div class="cap"><span>full run · 46.6 s / 1399 frames · never falls · IK reference | physics</span>
     <a href="../assets/video/track_box_full.mp4" download>download ↓</a></div>
+</div>
+
+<div class="reel sbs">
+  <video controls muted loop playsinline preload="metadata"
+    poster="../assets/poster/track_box.jpg">
+    <source src="../assets/video/track_box.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>20 s box cut · IK retargeted reference | physics — the GMR-reference twin is the hero above</span>
+    <a href="../assets/video/track_box.mp4" download>download ↓</a></div>
 </div>
 
 <div class="reel sbs">
@@ -165,10 +104,10 @@
 </div>
 
 <div class="legend">
-  <span class="badge"><b>46.6 s tracked</b> — 1399/1399 frames, never falls <span class="ev">OBSERVED</span></span>
-  <span class="badge">joint RMSE <b>0.150 rad</b> (IK) · <b>0.245 rad</b> (GMR) <span class="ev">OBSERVED</span></span>
-  <span class="badge">walk with footsteps: <b>15 s</b>, 0.086 rad <span class="ev">OBSERVED</span></span>
-  <span class="badge">free base: topples in <b>0.43 s</b> <span class="ev">OBSERVED</span></span>
+  <span class="badge"><b>46.6 s tracked</b> — 1399/1399 frames, never falls <span class="ev">Observed</span></span>
+  <span class="badge">joint RMSE <b>0.150 rad</b> (IK) · <b>0.245 rad</b> (GMR) <span class="ev">Observed</span></span>
+  <span class="badge">walk with footsteps: <b>15 s</b>, 0.086 rad <span class="ev">Observed</span></span>
+  <span class="badge">free base: topples in <b>0.43 s</b> <span class="ev">Observed</span></span>
 </div>
 
 <div class="caution"><strong>The 0.43 s row is the point:</strong> joint-level torque control alone
@@ -183,15 +122,15 @@ does not balance a humanoid — balance is a separate controller.</div>
     </video>
     <h3>Fresh BVH → G1, at ~380–550 FPS</h3>
     <p>CMU subject 13 basketball (38.3 s @ 120 Hz), downloaded fresh, retargeted by GMR in a real
-    terminal at <b>~380–550 FPS</b> CPU <span class="ev">OBSERVED</span>.</p>
+    terminal at <b>~380–550 FPS</b> CPU <span class="ev">Observed</span>.</p>
   </div>
   <div class="card">
-    <video controls muted playsinline loop preload="metadata" poster="../assets/poster/bball_gmr.jpg">
+    <video class="sbs" controls muted playsinline loop preload="metadata" poster="../assets/poster/bball_gmr.jpg">
       <source src="../assets/video/bball_gmr.mp4" type="video/mp4">
     </video>
     <h3>What it produced</h3>
     <p>Human | G1 render of the live trajectory — whole-body RMSE <b>16.2 cm</b> on this dynamic
-    clip <span class="ev">OBSERVED</span>.</p>
+    clip <span class="ev">Observed</span>.</p>
   </div>
 </div>
 
@@ -201,6 +140,11 @@ does not balance a humanoid — balance is a separate controller.</div>
   with the base fully free the robot topples in 0.43 s (reported as a result, not hidden). Mesh
   self-collision is off. GMR is external open-source work (Araújo et al., Stanford, ICRA 2026,
   MIT licence) — not a group algorithm.</p>
+</div>
+
+<div class="pager">
+  <a href="../motion-retargeting/"><small>← Previous project</small>Motion retargeting</a>
+  <a href="../mobile-robot/"><small>Next project →</small>RGB-D SLAM &amp; navigation</a>
 </div>
 
 <footer>
@@ -215,23 +159,26 @@ does not balance a humanoid — balance is a separate controller.</div>
 
 </div>
 
-<script>
-(function(){
-  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var v = document.getElementById('herovideo');
-  function playInView(){
-    if(!v || reduced) return;
-    var r = v.getBoundingClientRect();
-    var inView = r.top < innerHeight * 0.9 && r.bottom > innerHeight * 0.1;
-    if(inView && document.hidden !== true){ if(v.paused){ v.play().catch(function(){}); } }
-    else if(!inView && !v.paused){ v.pause(); }
-  }
-  v.addEventListener('click', function(){ v.paused ? v.play().catch(function(){}) : v.pause(); });
-  new IntersectionObserver(playInView, {threshold:.35}).observe(v);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ playInView(); } });
-  window.addEventListener('pageshow', playInView);
-  setInterval(playInView, 2500);
-})();
-</script>
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
 </body>
 </html>
