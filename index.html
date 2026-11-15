@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — Robotics builds</title>
+<meta name="description" content="Four robotics builds: humanoid motion retargeting (IK + GMR), MuJoCo physics tracking of the retargeted motion, real-robot RGB-D SLAM and navigation, and a MoveIt 2 manipulation stack.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%231f5f8b'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#1c1b19; --ink2:#4a4845; --ink3:#7a7772;
+    --line:#e3e1dc; --line2:#d0cdc7; --bg:#fdfcfa; --panel:#ffffff; --wash:#f6f5f1;
+    --blue:#1f5f8b; --bluew:#eaf2f8; --teal:#0f6e56; --tealw:#e6f4ef;
+    --amber:#8a5410; --amberw:#faf1e2; --coral:#9c3b1e; --coralw:#fbeee9;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 60px}
+
+  .brand{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+  .brand b{color:var(--ink)}
+  h1{font-size:clamp(26px,4.4vw,38px);line-height:1.2;margin:14px 0 8px;font-weight:700;letter-spacing:-.01em}
+  h1 em{font-style:normal;color:var(--blue)}
+  .hero-sub{color:var(--ink2);font-size:15px;margin:0}
+
+  .cards{display:grid;gap:26px;padding:26px 0 10px}
+  .card{display:block;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    background:var(--panel);transition:transform .2s,box-shadow .2s,border-color .2s}
+  .card:hover{transform:translateY(-2px);border-color:var(--line2);
+    box-shadow:0 10px 30px rgba(28,27,25,.10)}
+  .card .media{display:block;background:#101216}
+  .card video{display:block;width:100%;aspect-ratio:21/9;object-fit:cover;background:#101216}
+  .card img{display:block;width:100%;aspect-ratio:21/9;object-fit:contain;background:#101216}
+  /* the IK-vs-GMR split reel is 16:9 with two stacked rows — never crop it */
+  .card.split-card video{aspect-ratio:16/9;object-fit:contain}
+  /* 32:9 physics renders — contain keeps the per-pane captions visible */
+  .card.sbs-card video{object-fit:contain}
+  .label{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;padding:16px 22px 18px}
+  .label .kick{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink3);flex-basis:100%}
+  .label h2{font-size:19px;margin:0;font-weight:700;color:var(--ink)}
+  .label .go{margin-left:auto;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  .card.c-blue .go{color:var(--blue)} .card.c-teal .go{color:var(--teal)}
+  .card.c-amber .go{color:var(--amber)} .card.c-coral .go{color:var(--coral)}
+  .card:hover .go{text-decoration:underline}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 20px}
+  .chip{font-family:var(--mono);font-size:11.5px;color:var(--ink2);
+    border:1px solid var(--line);background:var(--wash);border-radius:999px;padding:3px 10px}
+  .chip b{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);margin-top:26px;padding-top:16px}
+  footer p{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin:0}
+
+  @media (max-width:860px){
+    .card video,.card img{aspect-ratio:16/9}
+    .label h2{font-size:16px}
+  }
+
+  /* capability-first proof strip — design refresh 2026-11-15 */
+  .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 8px}
+  .proof .p{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px}
+  .proof .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .proof .l{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.4}
+  .proof .e{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:.06em}
+  .proof .c-blue .n{color:var(--blue)} .proof .c-coral .n{color:var(--coral)}
+  .proof .c-teal .n{color:var(--teal)} .proof .c-amber .n{color:var(--amber)}
+  @media(max-width:860px){.proof{grid-template-columns:repeat(2,1fr)}}
+
+  h1.big{font-size:clamp(40px,6vw,64px);line-height:1.08;letter-spacing:-.02em;margin:18px 0 0}
+  h1.big em{color:var(--blue)}
+  .leadline{color:var(--ink2);font-size:16px;margin:12px 0 0}
+  .sectionhint{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink3);margin:32px 0 0}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px 0 10px}
+  @media(max-width:860px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brand"><b>BEN THAI</b> · ROBOTICS</div>
+  <h1 class="big">I build robots that see,<br><em>move and act.</em></h1>
+  <p class="leadline">Four end-to-end builds. Every number below was measured from the build itself.</p>
+  <div class="proof">
+    <div class="p c-blue"><div class="n">4</div><div class="l">robots built end to end</div><div class="e">OBSERVED</div></div>
+    <div class="p c-coral"><div class="n">46.6 s</div><div class="l">humanoid tracked, never falls</div><div class="e">OBSERVED</div></div>
+    <div class="p c-teal"><div class="n">7.1 cm</div><div class="l">Nav2 goal error on real hardware</div><div class="e">OBSERVED</div></div>
+    <div class="p c-amber"><div class="n">6/6</div><div class="l">pick-and-place stages passed</div><div class="e">OBSERVED</div></div>
+  </div>
+  <div class="sectionhint">Selected builds — recorded results</div>
+
+  <div class="cards">
+
+    <a class="card c-blue split-card" href="motion-retargeting/">
+      <span class="media"><video muted playsinline loop preload="none" poster="assets/poster/reel.jpg">
+        <source src="assets/video/reel.mp4" type="video/mp4"></video></span>
+      <span class="label">
+        <span class="kick">Humanoid · CMU mocap → Unitree G1 · sim</span>
+        <h2>Motion retargeting — IK vs GMR, six clips</h2>
+        <span class="go">open project →</span>
+      </span>
+      <span class="chips">
+        <span class="chip">top row <b>Stage 1 IK (Pinocchio)</b> ↑</span>
+        <span class="chip">bottom row <b>Stage 2 GMR (ICRA 2026)</b> ↓</span>
+        <span class="chip">RMSE <b>1.7–4.6 cm</b> / GMR <b>11.9–18.9 cm</b></span>
+        <span class="chip"><b>71 s</b> split reel</span>
+      </span>
+    </a>
+
+    <a class="card c-coral sbs-card" href="motion-physics/">
+      <span class="media"><video muted playsinline loop preload="none" poster="assets/poster/track_box_gmr.jpg">
+        <source src="assets/video/track_box_gmr.mp4" type="video/mp4"></video></span>
+      <span class="label">
+        <span class="kick">Humanoid · CMU mocap → Unitree G1 · MuJoCo sim</span>
+        <h2>Retargeting + physics — torque PD, never falls</h2>
+        <span class="go">open project →</span>
+      </span>
+      <span class="chips">
+        <span class="chip">torque PD <b>all 29 joints</b></span>
+        <span class="chip"><b>46.6 s</b> · 1399/1399 frames</span>
+        <span class="chip">RMSE <b>0.150 rad</b> (IK) / <b>0.245 rad</b> (GMR)</span>
+        <span class="chip">free base topples in <b>0.43 s</b></span>
+      </span>
+    </a>
+
+    <a class="card c-teal" href="mobile-robot/">
+      <span class="media"><video muted playsinline loop preload="none" poster="assets/poster/p08_slam.jpg">
+        <source src="assets/video/p08_slam_showcase.mp4" type="video/mp4"></video></span>
+      <span class="label">
+        <span class="kick">ROS 2 · real hardware · Kobuki + D435 + RPLiDAR</span>
+        <h2>RGB-D SLAM &amp; navigation on a real robot</h2>
+        <span class="go">open project →</span>
+      </span>
+      <span class="chips">
+        <span class="chip">RTAB-Map <b>live</b></span>
+        <span class="chip"><b>174</b> loop closures</span>
+        <span class="chip">Nav2 goals to <b>7.1 cm</b></span>
+        <span class="chip">cloud <b>72,643 colored voxels</b></span>
+      </span>
+    </a>
+
+    <a class="card c-amber" href="robot-arm/">
+      <span class="media"><video muted playsinline loop preload="none" poster="assets/poster/ur5e_pick_place.jpg">
+        <source src="assets/video/ur5e_pick_place.mp4" type="video/mp4"></video></span>
+      <span class="label">
+        <span class="kick">ROS 2 · manipulation · UR5e in Gazebo</span>
+        <h2>Robot arm — MoveIt 2 stack</h2>
+        <span class="go">open project →</span>
+      </span>
+      <span class="chips">
+        <span class="chip">ros2_control <b>+ MoveIt 2</b></span>
+        <span class="chip">FK / IK</span>
+        <span class="chip">pick-and-place <b>VERDICT: PASS</b></span>
+        <span class="chip"><b>92 s</b> mission clip</span>
+      </span>
+    </a>
+
+  </div>
+
+  <footer><p>Ben Thai · robotics portfolio · 2026 — all media recorded from the builds themselves</p></footer>
+</div>
+
+<script>
+(function(){
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var vids = document.querySelectorAll('video[loop][muted]');
+  function playInView(){
+    vids.forEach(function(v){
+      var r = v.getBoundingClientRect();
+      var inView = r.top < innerHeight * 0.9 && r.bottom > innerHeight * 0.1;
+      if(inView && !reduced){ if(v.paused){ v.play().catch(function(){}); } }
+      else if(!inView && !v.paused){ v.pause(); }
+    });
+  }
+  var vio = new IntersectionObserver(function(){ playInView(); },{threshold:.35});
+  vids.forEach(function(v){ vio.observe(v); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden){ playInView(); } });
+  window.addEventListener('pageshow', playInView);
+  setInterval(playInView, 2500);
+})();
+</script>
+</body>
+</html>

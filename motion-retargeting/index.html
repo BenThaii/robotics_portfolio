@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — Humanoid Motion Retargeting</title>
+<meta name="description" content="CMU mocap retargeted onto a Unitree G1 humanoid via two pipelines — per-frame bounded differential IK (Pinocchio) and GMR model-based retargeting.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%231f5f8b'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#1c1b19; --ink2:#4a4845; --ink3:#7a7772;
+    --line:#e3e1dc; --line2:#d0cdc7; --bg:#fdfcfa; --panel:#ffffff; --wash:#f6f5f1;
+    --blue:#1f5f8b; --bluew:#eaf2f8; --teal:#0f6e56; --tealw:#e6f4ef;
+    --amber:#8a5410; --amberw:#faf1e2; --coral:#9c3b1e; --coralw:#fbeee9;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:var(--wash);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+    font-family:var(--mono);font-size:12px}
+  .wrap{max-width:1180px;margin:0 auto;padding:44px 28px 90px}
+
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(253,252,250,.92);border-bottom:1px solid var(--line)}
+  nav .inner{max-width:1180px;margin:0 auto;padding:0 28px;height:50px;
+    display:flex;align-items:center;gap:20px}
+  .brand{font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .brand span{color:var(--blue)}
+  nav .links{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
+  nav .links a{color:var(--ink2);font-size:12.5px}
+  nav .links a:hover{color:var(--blue);text-decoration:underline}
+  nav a.back{color:var(--ink2);font-size:12.5px;white-space:nowrap}
+  nav a.back:hover{color:var(--blue)}
+
+  header.top{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:24px}
+  .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+  h1{font-size:30px;line-height:1.25;margin:12px 0 10px;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:15px;color:var(--ink2);margin:0;max-width:860px}
+  .meta{margin-top:14px;font-size:12.5px;color:var(--ink3)}
+  .meta b{color:var(--ink2)}
+
+  h2{font-size:19px;font-weight:700;margin:44px 0 8px;padding-top:8px;
+    border-top:1px solid var(--line);scroll-margin-top:70px}
+  h2.first{margin-top:32px;border-top:0;padding-top:0}
+  .lead{font-size:13.5px;color:var(--ink2);margin:0 0 14px;max-width:900px}
+  .lead strong{color:var(--ink)}
+
+  .note{background:var(--wash);border:1px solid var(--line);border-left:3px solid var(--blue);
+    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:16px 0}
+  .note strong{color:var(--ink)}
+  .caution{background:var(--amberw);border:1px solid #e8d8b8;border-left:3px solid var(--amber);
+    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:16px 0}
+  .caution strong{color:var(--ink)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+    border:1px solid var(--line2);border-radius:999px;padding:5px 12px;background:var(--panel)}
+  .badge b{color:var(--ink)}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .dot.s1{background:var(--blue)} .dot.s2{background:var(--teal)}
+  .ev{font-size:10.5px;letter-spacing:.06em;font-weight:700;padding:2px 6px;border-radius:3px;
+    border:1px solid var(--line2);color:var(--ink3);background:var(--wash);vertical-align:middle}
+
+  .video-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    overflow:hidden;margin-top:18px}
+  #herovideo{display:block;width:100%;aspect-ratio:32/9;object-fit:cover;background:#111;cursor:pointer}
+  .reel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:14px}
+  .reel video{width:100%;aspect-ratio:16/9;object-fit:contain;border-radius:5px;background:#111;display:block}
+  .cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink3);padding:9px 2px 0;font-family:var(--mono)}
+
+  .row{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin:16px 0}
+  .rowhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .rowhead h3{font-size:16.5px;margin:0;font-weight:700}
+  .rowhead .frames{font-size:12.5px;color:var(--ink3);font-family:var(--mono)}
+  .anno{font-size:13px;color:var(--ink2);margin:0 0 14px;max-width:900px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.pair{grid-template-columns:1fr}}
+  .cell{min-width:0}
+  .cellhead{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:8px}
+  .cellhead .tag{font-size:10.5px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;font-weight:700}
+  .tag.s1{background:var(--bluew);color:var(--blue);border:1px solid #c6dceb}
+  .tag.s2{background:var(--tealw);color:var(--teal);border:1px solid #bfe2d6}
+  .cell video{display:block;width:100%;aspect-ratio:32/9;object-fit:cover;border-radius:5px;background:#111}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+  .stat{font-size:11.5px;color:var(--ink2);background:var(--wash);border:1px solid var(--line);
+    border-radius:4px;padding:3px 8px;white-space:nowrap}
+  .stat b{color:var(--ink)}
+  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  button{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--blue);
+    background:var(--bluew);border:1px solid #c6dceb;border-radius:5px;padding:6px 14px}
+  button:hover{background:#dcebf5}
+  button.ghost{color:var(--ink2);background:var(--panel);border-color:var(--line2)}
+  button.ghost:hover{background:var(--wash)}
+  .row details{margin-top:12px}
+  .row summary{cursor:pointer;font-size:12px;color:var(--blue);list-style:none}
+  .row summary::-webkit-details-marker{display:none}
+  .row summary:hover{text-decoration:underline}
+  .row details img{width:100%;margin-top:10px;border-radius:6px;border:1px solid var(--line)}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+  .card .n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--blue);font-weight:700}
+  .card h3{font-size:14.5px;margin:7px 0 7px;font-weight:700}
+  .card p{font-size:13px;color:var(--ink2);margin:0}
+  .card p code{font-size:11.5px}
+  .card .formula{font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--ink);
+    background:var(--wash);border:1px solid var(--line);border-radius:6px;padding:12px;
+    overflow-x:auto;white-space:pre;margin:0}
+  .card video{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#111;
+    border-radius:5px;margin-bottom:12px;border:1px solid var(--line)}
+  .scope{background:var(--coralw);border:1px solid #efd6cd;border-left:3px solid var(--coral);
+    padding:14px 18px;border-radius:6px;font-size:13.5px;color:var(--ink2);margin:18px 0 0}
+  .scope h3{font-size:14.5px;color:var(--coral);margin:0 0 6px}
+  .scope p{margin:0}
+
+  .tablewrap{margin-top:18px;overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:760px;font-family:var(--mono)}
+  th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line)}
+  th{color:var(--ink3);font-weight:600;font-size:11px;text-transform:uppercase;
+    letter-spacing:.06em;background:var(--wash)}
+  td:first-child,th:first-child{text-align:left}
+  tbody tr:hover{background:var(--wash)}
+  tfoot td{border-bottom:none;color:var(--ink3);font-size:11.5px}
+  .tablewrap + .tablewrap{margin-top:22px}
+
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+  .cols{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
+  footer .fine{font-size:11.5px;font-family:var(--mono);line-height:1.7}
+  @media(max-width:860px){
+    nav .links{display:none}
+    .grid3,.grid2{grid-template-columns:1fr}
+  }
+
+  /* capability-first proof strip — design refresh 2026-11-15 */
+  .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 8px}
+  .proof .p{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px}
+  .proof .n{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .proof .l{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.4}
+  .proof .e{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:8px;letter-spacing:.06em}
+  .proof .c-blue .n{color:var(--blue)} .proof .c-coral .n{color:var(--coral)}
+  .proof .c-teal .n{color:var(--teal)} .proof .c-amber .n{color:var(--amber)}
+  @media(max-width:860px){.proof{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="back" href="../">← All projects</a>
+    <div class="brand">MOTION&nbsp;<span>RETARGETING</span></div>
+    <div class="links">
+      <a href="#reel">Reel</a><a href="#compare">Compare</a>
+      <a href="#numbers">Numbers</a><a href="../motion-physics/">Next project →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">CMU mocap → Unitree G1 · two pipelines</div>
+  <h1>I retarget human motion capture onto a humanoid robot.</h1>
+  <p class="sub">Human motion capture → a Unitree G1, through two retargeting pipelines, compared frame by frame.</p>
+  <p class="meta"><b>6 clips × 2 pipelines</b> · Stage 1 RMSE <b>1.7–4.6 cm</b> ·
+  <b>12</b> pytest passing · <b>71 s</b> split demo reel · CMU BVH + Unitree G1 23-DoF URDF</p>
+</header>
+  <div class="proof">
+    <div class="p c-blue"><div class="n">1.7–4.6 cm</div><div class="l">whole-body RMSE, own IK, 6 clips</div><div class="e">OBSERVED</div></div>
+    <div class="p c-teal"><div class="n">6 × 2</div><div class="l">clips × pipelines, frame-synced</div><div class="e">OBSERVED</div></div>
+    <div class="p c-blue"><div class="n">71 s</div><div class="l">split IK vs GMR demo reel</div><div class="e">OBSERVED</div></div>
+    <div class="p c-amber"><div class="n">12</div><div class="l">pytest passing</div><div class="e">OBSERVED</div></div>
+  </div>
+
+<div class="legend">
+  <span class="badge"><span class="dot s1"></span> Stage 1 — own IK pipeline (Pinocchio, position targets)</span>
+  <span class="badge"><span class="dot s2"></span> Stage 2 — GMR model-based retargeting</span>
+  <span class="badge"><span class="ev">OBSERVED</span> read from metrics JSON</span>
+  <span class="badge"><span class="ev">DOCUMENTED</span> from project README / notes</span>
+</div>
+
+
+
+<div class="video-card">
+  <video id="herovideo" muted playsinline loop autoplay preload="metadata"
+    poster="../assets/poster/walk_multi.jpg">
+    <source src="../assets/video/walk_multi.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>live loop — multi-directional walk (CMU 09_12)</span><span>human FK | G1 IK</span></div>
+</div>
+
+<h2 id="reel" class="first">Demo reel</h2>
+<p class="lead"><strong>If you watch only one thing, watch this.</strong>
+<strong>Top row = Stage 1</strong> (own Pinocchio IK), <strong>bottom row = Stage 2</strong> (GMR) —
+frame-synchronised from the same CMU clip.</p>
+<div class="reel">
+  <video controls muted playsinline loop preload="metadata" poster="../assets/poster/reel.jpg">
+    <source src="../assets/video/reel.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>reel.mp4 · 71 s · 1920×1080 · IK vs GMR</span>
+    <a href="../assets/video/reel.mp4" download>download original ↓</a></div>
+</div>
+
+<h2 id="compare">Clip-by-clip comparison</h2>
+<p class="lead"><strong>Play both</strong> starts the pair together; expand a row for its
+tracking-error plot <span class="ev">OBSERVED</span>.</p>
+
+<div id="rows"></div>
+
+<div class="note" style="margin-top:22px"><strong>Physics tracking →</strong> both pipelines’ outputs are tracked under torque PD in MuJoCo — 46.6 s, never falls. It has its own site: <a href="../motion-physics/">retargeting + physics</a>.</div>
+
+<div class="scope">
+  <h3>Honest scope — what this is NOT</h3>
+  <p><b>Stages 1–2</b> are kinematics-only: no dynamics, no torque limits, no contact reasoning —
+  the output is a kinematically feasible retargeted trajectory, and where the robot physically
+  cannot reach the human pose, the residual is reported as-is. Whether those trajectories are
+  <i>dynamically</i> executable is answered separately, under physics: see
+  <a href="../motion-physics/">retargeting + physics</a>.</p>
+</div>
+
+<div class="caution">
+  <strong>Read the numbers carefully.</strong> The two RMSE columns are
+  <strong>not directly comparable</strong> <span class="ev">DOCUMENTED</span>: Stage 1 IK
+  optimises exactly the position error these metrics measure, while GMR is rotation-weighted
+  against its own scaled targets — its advantage here is <strong>visual</strong> (natural arm
+  motion, grounded legs, plausible whole-body poses).
+  <strong>Attribution:</strong> GMR is <em>Retargeting Matters: General Motion Retargeting for
+  Humanoid Motion Tracking</em> (Araújo · Ze · Xu · Wu · Liu, <strong>Stanford University</strong>,
+  ICRA 2026, MIT licence) — <strong>external open-source work</strong>, not a group algorithm.
+</div>
+
+<h2 id="numbers">Numbers</h2>
+<p class="lead">RMSE in cm, unscaled 3-D keypoint position error vs BVH-derived targets;
+"saturated" = frames with ≥1 joint parked on a limit <span class="ev">OBSERVED</span>.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>clip</th><th>Stage 1 RMSE all</th><th>Stage 2 GMR RMSE all</th><th>GMR wrist RMSE</th></tr></thead>
+    <tbody>
+      <tr><td>walk</td><td>3.4 cm</td><td>16.5 cm</td><td>20.3 cm</td></tr>
+      <tr><td>walk_multi</td><td>3.6 cm</td><td>15.8 cm</td><td>19.7 cm</td></tr>
+      <tr><td>dance</td><td>4.6 cm</td><td>17.3 cm</td><td>23.1 cm</td></tr>
+      <tr><td>box</td><td>1.7 cm</td><td>18.9 cm</td><td>27.7 cm</td></tr>
+      <tr><td>kick</td><td>4.0 cm</td><td>13.1 cm</td><td>18.0 cm</td></tr>
+      <tr><td>jump</td><td>3.8 cm</td><td>11.9 cm</td><td>15.5 cm</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="4">The two RMSE columns are measured against different targets —
+      see the caveat above</td></tr></tfoot>
+  </table>
+</div>
+
+<footer>
+  <div class="cols">
+    <div>Ben Thai · robotics portfolio · 2026</div>
+    <div><a href="../">← All projects</a> · <a href="../motion-physics/">Next: retargeting + physics →</a></div>
+  </div>
+  <p class="fine">Motion data: CMU Graphics Lab motion capture database · robot model: Unitree G1
+  23-DoF URDF · Stage 2: GMR (Araújo et al., Stanford University, ICRA 2026, MIT licence) —
+  external work, not a group algorithm</p>
+</footer>
+
+</div>
+
+<script>
+/* Comparison rows are generated from one data array. */
+const clips = [
+  {n:"01", key:"walk",       label:"Walk 01_01",        frames:688,  s1:3.4, w1:3.0, sat:0,   s2:16.5, w2:20.3,
+   anno:"The baseline: clean periodic gait with zero joint-limit saturation. Ankles track to 0.01–0.02 cm."},
+  {n:"02", key:"dance",      label:"Dance 05_02",       frames:281,  s1:4.6, w1:3.7, sat:77,  s2:17.3, w2:23.1,
+   anno:"The arm-proportion stress test: extreme poses exceed G1's reach envelope and 77 frames park a joint on a limit. GMR's rotation matching survives this; the residual is reported, not hidden."},
+  {n:"03", key:"box",        label:"Box 14_01",         frames:1399, s1:1.7, w1:0.9, sat:206, s2:18.9, w2:27.7,
+   anno:"The longest clip (47 s) and the best tracker: 1.7 cm whole-body RMSE across 1,399 frames of squat-lift-transport."},
+  {n:"04", key:"walk_multi", label:"Walk multi 09_12",  frames:480,  s1:3.6, w1:4.6, sat:77,  s2:15.8, w2:19.7,
+   anno:"Forward, backward and sideways in one take. Direction changes break the warm-start's rhythm — the solver works about 3× harder — yet ankle error stays at 0.03 cm."},
+  {n:"05", key:"kick",       label:"Kick 10_01",        frames:201,  s1:4.0, w1:3.6, sat:47,  s2:13.1, w2:18.0,
+   anno:"Approach, plant, strike, recover — all on kinematics alone. The knee residual peaks at 7.0 cm where the human kick passes G1's reach envelope."},
+  {n:"06", key:"jump",       label:"Jump 16_01",        frames:81,   s1:3.8, w1:4.6, sat:0,   s2:11.9, w2:15.5,
+   anno:"Crouch, flight, landing: the pelvis task follows the ballistic arc, so the robot genuinely leaves the ground plane. Zero saturated joints."}
+];
+
+function cell(tag, cls, key, suffix, poster, stats){
+  return `<div class="cell">
+    <div class="cellhead"><span class="tag ${cls}">${tag}</span></div>
+    <video src="../assets/video/${key}${suffix}.mp4" poster="${poster}"
+      controls muted playsinline loop preload="metadata"></video>
+    <div class="stats">${stats.map(s=>`<span class="stat">${s}</span>`).join("")}</div>
+  </div>`;
+}
+
+document.getElementById("rows").innerHTML = clips.map(c=>{
+  const s1 = cell("STAGE 1 · IK", "s1", c.key, "", `../assets/poster/${c.key}.jpg`, [
+    `<b>${c.s1} cm</b> RMSE all`, `<b>${c.w1} cm</b> wrist`, `<b>${c.sat}</b> saturated frames`
+  ]);
+  const s2 = cell("STAGE 2 · GMR", "s2", c.key, "_gmr", `../assets/poster/${c.key}_gmr.jpg`, [
+    `<b>${c.s2} cm</b> RMSE all`, `<b>${c.w2} cm</b> wrist`, `same yardstick, different targets`
+  ]);
+  return `<div class="row" id="row-${c.key}">
+    <div class="rowhead"><h3>${c.label}</h3><span class="frames">${c.frames} frames · 30 fps</span></div>
+    <p class="anno">${c.anno}</p>
+    <div class="pair">${s1}${s2}</div>
+    <div class="controls">
+      <button onclick="pair('${c.key}','play')">Play both</button>
+      <button class="ghost" onclick="pair('${c.key}','pause')">Pause both</button>
+    </div>
+    <details><summary>tracking-error plot</summary>
+      <img loading="lazy" src="../assets/plots/${c.key}.png" alt="${c.key} tracking error per keypoint over time">
+    </details>
+  </div>`;
+}).join("");
+
+function pair(key, action){
+  document.querySelectorAll(`#row-${key} video`).forEach(v=>{
+    if(action === "play"){ v.currentTime = 0; v.play().catch(()=>{}); }
+    else { v.pause(); }
+  });
+}
+
+(function(){
+  var v = document.getElementById('herovideo');
+  if(!v) return;
+  v.addEventListener('click', function(){ v.paused ? v.play().catch(function(){}) : v.pause(); });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && v.paused){ v.play().catch(function(){}); }
+  });
+})();
+</script>
+</body>
+</html>
