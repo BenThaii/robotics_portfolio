@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — UR5e manipulation with MoveIt 2 · Technical report</title>
+<meta name="description" content="Technical report: UR5e manipulation with MoveIt 2.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.report{position:relative;z-index:1;max-width:980px;margin:0 auto;
+  padding:190px 32px 96px;color:var(--paper)}
+.report__kicker,.report__eyebrow{font-family:var(--display);font-size:12px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--faint);margin:0 0 18px}
+.report h1{font-family:var(--display);font-size:clamp(34px,5.4vw,64px);
+  line-height:1.02;letter-spacing:-.025em;font-weight:500;margin:0 0 38px;
+  color:var(--white);max-width:18ch}
+.report h2{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);
+  font-weight:500;letter-spacing:-.01em;margin:64px 0 18px;padding-top:26px;
+  border-top:1px solid var(--rule);color:var(--white)}
+.report h3{font-family:var(--display);font-size:19px;font-weight:500;margin:32px 0 12px}
+.report p,.report li{font-size:16px;line-height:1.75;color:var(--paper);max-width:78ch}
+.report p{margin:0 0 18px}
+.report ul,.report ol{padding-left:22px;margin:0 0 20px}
+.report li{margin:0 0 8px}
+.report a{text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:var(--rule);color:var(--white)}
+.report a:hover{text-decoration-color:var(--white)}
+.report strong{color:var(--white);font-weight:600}
+.report hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+.report code{font-family:var(--mono);font-size:.88em;color:var(--white);
+  background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px}
+.report pre{background:#0b0b0b;border:1px solid var(--rule);border-radius:4px;
+  padding:20px 22px;overflow-x:auto;margin:0 0 26px}
+.report pre code{background:none;padding:0;font-size:13px;line-height:1.65;color:var(--paper)}
+.report table{border-collapse:collapse;width:100%;margin:0 0 28px;font-size:14px}
+.report th,.report td{text-align:left;padding:11px 14px;
+  border-bottom:1px solid var(--rule);vertical-align:top}
+.report th{font-family:var(--display);font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;white-space:nowrap}
+.report td{color:var(--paper)}
+.report tbody tr:hover{background:rgba(255,255,255,.03)}
+.report__pager{display:flex;justify-content:space-between;gap:24px;
+  border-top:1px solid var(--rule);padding:28px 0 0;margin-top:72px}
+.report__pager a{font-family:var(--display);font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none}
+.report__pager small{display:block;color:var(--faint);font-size:11px;margin-bottom:6px}
+@media(max-width:720px){
+  .report{padding:132px 22px 72px}
+  .report table{font-size:12px;display:block;overflow-x:auto;white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="index.html">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Technical reports
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="index.html">Index</a>
+    <a href="../robot-arm/">Project page</a>
+    <a href="../">Home</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="index.html">Reports index</a>
+  <a href="../robot-arm/">Project page</a>
+</div>
+<main class="report">
+  <p class="report__kicker">Technical report · 04 / 05</p>
+  <h1>UR5e manipulation with MoveIt 2</h1>
+  <article class="report__body">
+<p><strong>Project:</strong> Five-phase industrial-arm program (i01–i05) on a simulated UR5e,
+ending in a perception-driven pick-and-place capstone.
+<strong>Demo:</strong> <a href="https://benthaii.github.io/robotics_portfolio/robot-arm/">https://benthaii.github.io/robotics_portfolio/robot-arm/</a>
+<strong>Scope:</strong> Gazebo simulation only. No physical arm was driven.</p>
+<hr />
+<h2>1. What was built</h2>
+<p>A five-phase ladder, each phase with a runbook and study doc:</p>
+<table>
+<thead>
+<tr>
+<th>phase</th>
+<th>content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>i01</td>
+<td><code>ros2_control</code> bring-up of UR5e in Gazebo — controllers, joint state</td>
+</tr>
+<tr>
+<td>i02</td>
+<td>Kinematics with MoveIt 2 — planning, IK/FK</td>
+</tr>
+<tr>
+<td>i03</td>
+<td>Scripted missions — programmed motion sequences</td>
+</tr>
+<tr>
+<td>i04</td>
+<td>RGB-D perception for the arm</td>
+</tr>
+<tr>
+<td>i05</td>
+<td>Pick-and-place capstone — sense → plan → grasp → place</td>
+</tr>
+</tbody>
+</table>
+<p>The capstone was executed live twice with two passing runs.</p>
+<h2>2. Stack</h2>
+<p>ROS 2 Jazzy · MoveIt 2 · ros2_control · Gazebo (gz sim) · UR5e URDF ·
+RGB-D perception (camera + depth pipeline) · YOLO-segmentation target mask.</p>
+<h2>3. Perception → planning → grasp</h2>
+<p>The grasp target comes from the camera, not a hardcoded pose:</p>
+<pre><code>Gazebo camera frame
+  → YOLO detection box + segmentation mask
+  → mask becomes a MoveIt planning-scene collision object
+  → planner respects table, target and gripper
+  → grasp goal handed to MoveIt
+  → execute on ros2_control joint trajectory controllers
+</code></pre>
+<p>MoveIt 2 planning-scene collision objects are added and updated at runtime, so
+plans respect the changing scene rather than a static world model.</p>
+<h2>4. Result</h2>
+<p>OBSERVED from the live capstone run:</p>
+<ul>
+<li><strong>6/6 capstone stages passed</strong></li>
+<li><strong>92 s</strong> full mission, one take</li>
+<li><strong>1</strong> camera-derived grasp target — never hardcoded</li>
+<li><strong>PASS</strong> verdict recorded in the clip</li>
+</ul>
+<p>The perception figure shows the live run: camera frame with detection box,
+predicted mask, and the blend; the mask becomes the planning-scene object the
+arm plans around and grasps.</p>
+<h2>5. Engineering rigour</h2>
+<p>Same predict-then-run discipline as the mobile-robot track: runbooks state
+expected observations, and the six live findings record defects and behaviours
+with root causes rather than silent patches. Acceptance was a live-tested PASS,
+not code-review-only completion.</p>
+<h2>6. Honest scope</h2>
+<ul>
+<li><strong>Simulation only.</strong> Do not claim "operated a physical robot arm" or "real
+  UR5e". The robot identity here is a deliberate sim platform choice — the
+  lab's arm is a different model (UR12e), recorded separately.</li>
+<li>i01–i05 prove pipeline competence in manipulation simulation, not industrial
+  deployment experience.</li>
+<li>No invented metrics: the six findings, PASS ×2 and stage counts are the
+  verified record. No success rates or accuracy numbers without a source.</li>
+<li>Self-directed learning program, no employer/title/dates. AI-assisted
+  development — designed, executed and verified under direction.</li>
+</ul>
+<h2>7. Reproduce</h2>
+<pre><code class="language-bash"># ROS 2 Jazzy + Gazebo + MoveIt 2:
+#   i01 ros2_control bring-up → i02 MoveIt kinematics → i03 scripted missions
+#   → i04 RGB-D perception → i05 perception-driven pick-and-place
+</code></pre>
+  </article>
+  <nav class="report__pager" aria-label="Reports">
+    <a href="03-mobile-robot.html"><small>← Previous report</small>RGB-D SLAM and navigation on a real mobile robot</a><a href="cpp-ik-port.html"><small>Next report →</small>C++ port — bounded differential IK / retargeting</a>
+  </nav>
+</main>
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

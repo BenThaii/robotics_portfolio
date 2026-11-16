@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — RGB-D SLAM and navigation on a real mobile robot · Technical report</title>
+<meta name="description" content="Technical report: RGB-D SLAM and navigation on a real mobile robot.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.report{position:relative;z-index:1;max-width:980px;margin:0 auto;
+  padding:190px 32px 96px;color:var(--paper)}
+.report__kicker,.report__eyebrow{font-family:var(--display);font-size:12px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--faint);margin:0 0 18px}
+.report h1{font-family:var(--display);font-size:clamp(34px,5.4vw,64px);
+  line-height:1.02;letter-spacing:-.025em;font-weight:500;margin:0 0 38px;
+  color:var(--white);max-width:18ch}
+.report h2{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);
+  font-weight:500;letter-spacing:-.01em;margin:64px 0 18px;padding-top:26px;
+  border-top:1px solid var(--rule);color:var(--white)}
+.report h3{font-family:var(--display);font-size:19px;font-weight:500;margin:32px 0 12px}
+.report p,.report li{font-size:16px;line-height:1.75;color:var(--paper);max-width:78ch}
+.report p{margin:0 0 18px}
+.report ul,.report ol{padding-left:22px;margin:0 0 20px}
+.report li{margin:0 0 8px}
+.report a{text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:var(--rule);color:var(--white)}
+.report a:hover{text-decoration-color:var(--white)}
+.report strong{color:var(--white);font-weight:600}
+.report hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+.report code{font-family:var(--mono);font-size:.88em;color:var(--white);
+  background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px}
+.report pre{background:#0b0b0b;border:1px solid var(--rule);border-radius:4px;
+  padding:20px 22px;overflow-x:auto;margin:0 0 26px}
+.report pre code{background:none;padding:0;font-size:13px;line-height:1.65;color:var(--paper)}
+.report table{border-collapse:collapse;width:100%;margin:0 0 28px;font-size:14px}
+.report th,.report td{text-align:left;padding:11px 14px;
+  border-bottom:1px solid var(--rule);vertical-align:top}
+.report th{font-family:var(--display);font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;white-space:nowrap}
+.report td{color:var(--paper)}
+.report tbody tr:hover{background:rgba(255,255,255,.03)}
+.report__pager{display:flex;justify-content:space-between;gap:24px;
+  border-top:1px solid var(--rule);padding:28px 0 0;margin-top:72px}
+.report__pager a{font-family:var(--display);font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none}
+.report__pager small{display:block;color:var(--faint);font-size:11px;margin-bottom:6px}
+@media(max-width:720px){
+  .report{padding:132px 22px 72px}
+  .report table{font-size:12px;display:block;overflow-x:auto;white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="index.html">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Technical reports
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="index.html">Index</a>
+    <a href="../mobile-robot/">Project page</a>
+    <a href="../">Home</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="index.html">Reports index</a>
+  <a href="../mobile-robot/">Project page</a>
+</div>
+<main class="report">
+  <p class="report__kicker">Technical report · 03 / 05</p>
+  <h1>RGB-D SLAM and navigation on a real mobile robot</h1>
+  <article class="report__body">
+<p><strong>Project:</strong> RTAB-Map RGB-D SLAM on a Kobuki base, then Nav2 navigation on the
+map the robot just built. <strong>This is real hardware</strong>, not simulation.
+<strong>Demo:</strong> <a href="https://benthaii.github.io/robotics_portfolio/mobile-robot/">https://benthaii.github.io/robotics_portfolio/mobile-robot/</a></p>
+<hr />
+<h2>1. What was built</h2>
+<p>An eight-phase self-directed program (P0.1–P0.8): workstation setup → Gazebo
+bring-up (topics, TF, camera, LiDAR, <code>ros2 bag</code>) → SLAM with slam_toolbox +
+AMCL → Nav2 autonomous navigation → RGB-D perception and LiDAR fusion →
+inspection-mission capstone → real-robot deployment → <strong>RGB-D SLAM with
+RTAB-Map on the real robot</strong>.</p>
+<p>This report covers the final hardware stage; earlier stages were simulation.</p>
+<h2>2. Hardware and stack</h2>
+<ul>
+<li><strong>Base:</strong> Kobuki (TurtleBot2-class)</li>
+<li><strong>Compute:</strong> Jetson Xavier NX, ROS 2 Foxy (matched to the robot)</li>
+<li><strong>Sensors:</strong> Intel RealSense D435 (RGB-D, colour-aligned), RPLiDAR A3</li>
+<li><strong>SLAM:</strong> RTAB-Map 0.21.1 — RGB-D, pose graph, loop closure</li>
+<li><strong>Navigation:</strong> Nav2 on the RTAB-Map occupancy grid</li>
+<li><strong>Simulation twin:</strong> ROS 2 Jazzy + Gazebo, map_server + AMCL + Nav2</li>
+</ul>
+<h2>3. Pipeline</h2>
+<pre><code>sensors (D435 depth/colour, A3 scan, wheel odom)
+  → TF + optical-frame convention
+  → RTAB-Map RGB-D odometry + local/global loop closure
+  → pose-graph optimization                 → corrected trajectory + 3-D cloud
+  → occupancy grid (depth → ray tracing)   → Nav2 costmaps
+  → Nav2 goals                              → guarded drives with safety stops
+</code></pre>
+<h2>4. Engineering work that mattered</h2>
+<p><strong>Sensor-frame bug found from the point cloud alone.</strong> A custom RealSense
+publisher stamped optical-convention pixels with a non-optical, identity-rotated
+TF frame. RTAB-Map silently projected the whole room 0.7–3.6 m overhead.
+Diagnosed from the cloud's z-distribution (a level camera at 0.5 m cannot see
+above ~1.6 m), fixed with the standard optical-frame convention
+(rpy −90°/0/−90°), verified end to end: cloud flattened to 0–1.7 m and became
+floor-dominated; grid extent grew ~60%.</p>
+<p><strong>Cross-version compatibility.</strong> RTAB-Map parameter/topic/QoS names were
+checked against the Foxy release source before running. Two version-default
+traps caught: <code>Grid/RayTracing</code> false in 0.21.1 vs true in 0.23.13, and QoS
+defaults (Reliable vs best_effort publishers).</p>
+<p><strong>Safety layering.</strong> Front-scan obstacle stop, bumper panic-stop, 0.6 s command
+watchdog, and odometry-integrated (not timed) motion commands. Three guarded
+drives completed with zero collisions.</p>
+<p><strong>Predict-then-run discipline.</strong> Every drive had a written expected observation;
+surprises became numbered findings with root causes. Failure modes were
+compared across sim and real — the textureless sim rejected all 19 global loop
+closures (texture starvation), while the real room showed the opposite failure
+(≈134 feature matches, &lt;20 geometric inliers).</p>
+<h2>5. Results</h2>
+<p>OBSERVED, read from the RTAB-Map pose-graph database and the final Nav2 run.</p>
+<table>
+<thead>
+<tr>
+<th>metric</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>accepted global loop closures, final session</td>
+<td><strong>174</strong> (17 more in a second session)</td>
+</tr>
+<tr>
+<td>keyframes, final session</td>
+<td>4,041 (second session added 4,893)</td>
+</tr>
+<tr>
+<td>wheel-odometry drift corrected by pose-graph optimization</td>
+<td><strong>0.75 m</strong></td>
+</tr>
+<tr>
+<td>mapped occupancy grid</td>
+<td>10.1 × 9.7 m, 5 cm cells</td>
+</tr>
+<tr>
+<td>final Nav2 goal error</td>
+<td><strong>7.1 cm</strong></td>
+</tr>
+<tr>
+<td>fused coloured voxels</td>
+<td>72,643 at 5 cm, from 1.6M RGB-D points</td>
+</tr>
+<tr>
+<td>collisions across 3 guarded drives</td>
+<td><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p>A Gazebo twin loads the saved map into <code>map_server + AMCL</code> and runs Nav2 through
+five waypoints in a pillar field: <strong>5/5 waypoints reached</strong>. This is simulation,
+reproducible from the repo, not hardware.</p>
+<h2>6. Honest scope</h2>
+<ul>
+<li>Real hardware: the map, fused cloud and Nav2 goal error. Simulation: the
+  waypoint mission. Labelled separately throughout.</li>
+<li>This is a learning rig on lab hardware — not a product, no users, no fleet.</li>
+<li>Self-directed program, no employer/title/dates. AI coding agents wrote
+  substantial code under direction; the verifiable contribution is program
+  design, execution, verification and debugging.</li>
+</ul>
+<h2>7. Reproduce</h2>
+<pre><code class="language-bash"># simulation track (ROS 2 Jazzy):
+#   slam_toolbox mapping → save map → map_server + AMCL → Nav2 waypoints
+# hardware track (ROS 2 Foxy on Jetson):
+#   D435 + A3 bring-up → RTAB-Map 0.21.1 → RTAB-Map db → occupancy grid → Nav2
+</code></pre>
+  </article>
+  <nav class="report__pager" aria-label="Reports">
+    <a href="02-motion-physics.html"><small>← Previous report</small>Retargeted motion under physics (G1, MuJoCo)</a><a href="04-robot-arm.html"><small>Next report →</small>UR5e manipulation with MoveIt 2</a>
+  </nav>
+</main>
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

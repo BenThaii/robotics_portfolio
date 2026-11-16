@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — Humanoid motion retargeting · Technical report</title>
+<meta name="description" content="Technical report: Humanoid motion retargeting.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.report{position:relative;z-index:1;max-width:980px;margin:0 auto;
+  padding:190px 32px 96px;color:var(--paper)}
+.report__kicker,.report__eyebrow{font-family:var(--display);font-size:12px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--faint);margin:0 0 18px}
+.report h1{font-family:var(--display);font-size:clamp(34px,5.4vw,64px);
+  line-height:1.02;letter-spacing:-.025em;font-weight:500;margin:0 0 38px;
+  color:var(--white);max-width:18ch}
+.report h2{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);
+  font-weight:500;letter-spacing:-.01em;margin:64px 0 18px;padding-top:26px;
+  border-top:1px solid var(--rule);color:var(--white)}
+.report h3{font-family:var(--display);font-size:19px;font-weight:500;margin:32px 0 12px}
+.report p,.report li{font-size:16px;line-height:1.75;color:var(--paper);max-width:78ch}
+.report p{margin:0 0 18px}
+.report ul,.report ol{padding-left:22px;margin:0 0 20px}
+.report li{margin:0 0 8px}
+.report a{text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:var(--rule);color:var(--white)}
+.report a:hover{text-decoration-color:var(--white)}
+.report strong{color:var(--white);font-weight:600}
+.report hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+.report code{font-family:var(--mono);font-size:.88em;color:var(--white);
+  background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px}
+.report pre{background:#0b0b0b;border:1px solid var(--rule);border-radius:4px;
+  padding:20px 22px;overflow-x:auto;margin:0 0 26px}
+.report pre code{background:none;padding:0;font-size:13px;line-height:1.65;color:var(--paper)}
+.report table{border-collapse:collapse;width:100%;margin:0 0 28px;font-size:14px}
+.report th,.report td{text-align:left;padding:11px 14px;
+  border-bottom:1px solid var(--rule);vertical-align:top}
+.report th{font-family:var(--display);font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;white-space:nowrap}
+.report td{color:var(--paper)}
+.report tbody tr:hover{background:rgba(255,255,255,.03)}
+.report__pager{display:flex;justify-content:space-between;gap:24px;
+  border-top:1px solid var(--rule);padding:28px 0 0;margin-top:72px}
+.report__pager a{font-family:var(--display);font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none}
+.report__pager small{display:block;color:var(--faint);font-size:11px;margin-bottom:6px}
+@media(max-width:720px){
+  .report{padding:132px 22px 72px}
+  .report table{font-size:12px;display:block;overflow-x:auto;white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="index.html">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Technical reports
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="index.html">Index</a>
+    <a href="../motion-retargeting/">Project page</a>
+    <a href="../">Home</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="index.html">Reports index</a>
+  <a href="../motion-retargeting/">Project page</a>
+</div>
+<main class="report">
+  <p class="report__kicker">Technical report · 01 / 05</p>
+  <h1>Humanoid motion retargeting</h1>
+  <article class="report__body">
+<p><strong>Project:</strong> CMU mocap (BVH) → Unitree G1 humanoid, two retargeting pipelines
+<strong>Demo:</strong> <a href="https://benthaii.github.io/robotics_portfolio/motion-retargeting/">https://benthaii.github.io/robotics_portfolio/motion-retargeting/</a>
+<strong>Scope:</strong> kinematics only. No dynamics, balance, contact reasoning or torque limits.</p>
+<hr />
+<h2>1. Problem</h2>
+<p>Human motion capture gives realistic joint motion, but a human skeleton and a
+G1 humanoid do not share the same proportions, axis conventions or reach
+envelope. Copying mocap joints onto the robot produces unreachable poses and
+unnatural motion. The task is to convert a BVH clip into a <em>kinematically
+feasible</em> robot joint trajectory that keeps the human's intent — where the
+hands and feet go, which way the body faces — while respecting the robot's
+joint limits.</p>
+<p>Two pipelines are built and compared:</p>
+<ul>
+<li><strong>Stage 1 — own IK solver.</strong> A per-frame bounded least-squares solver written
+  for this project.</li>
+<li><strong>Stage 2 — GMR.</strong> An external open-source model-based retargeter
+  (Araújo et al., Stanford University, ICRA 2026, MIT licence), integrated and
+  bridged to this project's data format. GMR is <em>not</em> authored here.</li>
+</ul>
+<h2>2. Pipeline</h2>
+<pre><code>BVH file
+  → parse skeleton FK                      → (T, J, 3) keypoint positions
+  → axis map: BVH (x,y,z) → robot (z,x,y)  → z-up, x-forward (proper rotation)
+  → 120 → 30 fps uniform subsample
+  → per-limb proportion matching           → robot-scale keypoint targets
+  → ground alignment                       → lowest ankle at standing height
+  → pelvis yaw from mapped hip rotation
+  → per-frame IK targets
+  → warm-started bounded least squares     → joint trajectory (T, nq)
+  → metrics (RMSE, saturation) + render    → side-by-side video
+</code></pre>
+<h2>3. Key engineering decisions</h2>
+<p><strong>Coordinate mapping.</strong> CMU BVH faces +z, y is up, left is +x. The G1 URDF is
+x-forward, y-left, z-up. The map <code>(x, y, z)_bvh → (z, x, y)_robot</code> is a proper
+rotation (determinant +1), so handedness is preserved. Verified from toe
+direction and root displacement — the dataset's own docs say "x forward", but
+the files do not follow that.</p>
+<p><strong>Per-limb proportion matching.</strong> One global scale cannot fit head, hands and
+feet at once: mocap skeletons are never proportioned like G1, and the
+una-dinosauria CMU conversions are also ~1/6 scale in arbitrary units. Each
+keypoint's pelvis-relative offset gets its own factor:</p>
+<pre><code>scale[task] = robot limb length / human rest-pose limb length
+</code></pre>
+<p>Legs use ankle distance (shared with the knee) so the contact-critical feet
+are exact. Root motion transfers with the mean leg scale, so the robot walks
+the human's path scaled to its own stride. Units cancel per limb; absolute BVH
+units are never trusted.</p>
+<p><strong>Two-bone arm construction.</strong> G1's arms are proportionally much shorter than
+a human's, so a scaled wrist target lands outside the reach envelope and the
+arm mushes toward whatever it can reach. Instead, each arm target is rebuilt
+every frame from the robot's <em>current</em> shoulder position (warm-start FK) using
+the human's upper-arm and forearm <strong>directions</strong> at the robot's own segment
+lengths:</p>
+<pre><code>elbow_target = shoulder + du * s1
+wrist_target = shoulder + du * s1 + df_perp * s2
+</code></pre>
+<p><code>df</code> is projected perpendicular to <code>du</code> because a 1-DoF elbow cannot
+hyperextend. The target is reachable by construction while still pointing
+where the human points, with the human's elbow bend.</p>
+<p><strong>Log-parameterized freeflyer.</strong> The configuration is reparameterized as
+<code>z = [position(3), rotation-vector(3), joint angles]</code>. scipy's
+Trust-Region-Reflective bounded least squares can then enforce joint limits
+<strong>exactly</strong> on the actuated joints while the base pose stays unbounded:</p>
+<pre><code>min_z  ½‖e(z)‖²     subject to   lower ≤ q_act(z) ≤ upper
+</code></pre>
+<p><strong>Residual stack</strong> (one vector per frame, minimized jointly):</p>
+<ul>
+<li>3-D position tasks: head (d435 proxy), wrists (2.0), elbows, ankles (2.0),
+  knees (0.2), pelvis (2.0)</li>
+<li>pelvis yaw-only orientation: <code>0.5 · log3(Rz(yaw_des) · R_curᵀ)</code></li>
+<li>posture regularizer: <code>0.02 · (q_ref − q_act)</code> toward the previous frame</li>
+</ul>
+<p>The posture row is what turns independent poses into a <em>trajectory</em>. Each
+frame warm-starts from the previous solution, both as initial guess and as
+posture reference. Solver: <code>max_nfev=120</code>, <code>xtol=1e-10</code>, finite-difference
+Jacobians inside TRF.</p>
+<h2>4. Results</h2>
+<p>OBSERVED, 2026-11-15. Six CMU clips, 120→30 fps. RMSE is unscaled 3-D position
+error of tracked keypoints versus BVH-derived targets, in centimetres.
+"Saturated" counts frames with at least one joint parked on a limit.</p>
+<table>
+<thead>
+<tr>
+<th>clip</th>
+<th style="text-align: right;">frames</th>
+<th style="text-align: right;">RMSE all</th>
+<th style="text-align: right;">ankle</th>
+<th style="text-align: right;">knee</th>
+<th style="text-align: right;">wrist</th>
+<th style="text-align: right;">head</th>
+<th style="text-align: right;">pelvis</th>
+<th style="text-align: right;">saturated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>walk</td>
+<td style="text-align: right;">688</td>
+<td style="text-align: right;"><strong>3.4 cm</strong></td>
+<td style="text-align: right;">0.01–0.02</td>
+<td style="text-align: right;">3.1–3.2</td>
+<td style="text-align: right;">2.4–3.5</td>
+<td style="text-align: right;">7.2</td>
+<td style="text-align: right;">1.4</td>
+<td style="text-align: right;"><strong>0</strong></td>
+</tr>
+<tr>
+<td>dance</td>
+<td style="text-align: right;">281</td>
+<td style="text-align: right;"><strong>4.6 cm</strong></td>
+<td style="text-align: right;">0.03–1.1</td>
+<td style="text-align: right;">5.9–7.0</td>
+<td style="text-align: right;">3.4–3.9</td>
+<td style="text-align: right;">7.3</td>
+<td style="text-align: right;">1.5</td>
+<td style="text-align: right;">77</td>
+</tr>
+<tr>
+<td>box</td>
+<td style="text-align: right;">1399</td>
+<td style="text-align: right;"><strong>1.7 cm</strong></td>
+<td style="text-align: right;">0.01–0.02</td>
+<td style="text-align: right;">2.1–2.5</td>
+<td style="text-align: right;">0.7–1.1</td>
+<td style="text-align: right;">3.4</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">206</td>
+</tr>
+<tr>
+<td>walk_multi</td>
+<td style="text-align: right;">480</td>
+<td style="text-align: right;"><strong>3.6 cm</strong></td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">4.4–4.5</td>
+<td style="text-align: right;">4.5–4.6</td>
+<td style="text-align: right;">4.6</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">77</td>
+</tr>
+<tr>
+<td>kick</td>
+<td style="text-align: right;">201</td>
+<td style="text-align: right;"><strong>4.0 cm</strong></td>
+<td style="text-align: right;">0.03–0.91</td>
+<td style="text-align: right;">4.4–7.0</td>
+<td style="text-align: right;">3.0–4.2</td>
+<td style="text-align: right;">5.4</td>
+<td style="text-align: right;">1.5</td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr>
+<td>jump</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;"><strong>3.8 cm</strong></td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">4.9–5.1</td>
+<td style="text-align: right;">4.3–4.9</td>
+<td style="text-align: right;">4.3</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;"><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Whole-body RMSE: <strong>1.7–4.6 cm</strong>. Ankles track to 0.01–1.1 cm. Zero joint-limit
+saturation on walk and jump.</p>
+<p>The saturated dance/box frames are expected, not hidden: G1's arms are much
+shorter than the mocap skeleton's, so extreme poses exceed the reach envelope.
+The IK parks joints on limits — the correct bounded optimum — and reports the
+residual.</p>
+<p><strong>Stage 2 (GMR), same yardstick but different targets:</strong></p>
+<table>
+<thead>
+<tr>
+<th>clip</th>
+<th style="text-align: right;">RMSE all</th>
+<th style="text-align: right;">wrist</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>walk</td>
+<td style="text-align: right;">16.5 cm</td>
+<td style="text-align: right;">20.3</td>
+</tr>
+<tr>
+<td>dance</td>
+<td style="text-align: right;">17.3 cm</td>
+<td style="text-align: right;">23.0</td>
+</tr>
+<tr>
+<td>box</td>
+<td style="text-align: right;">18.9 cm</td>
+<td style="text-align: right;">27.7</td>
+</tr>
+<tr>
+<td>walk_multi</td>
+<td style="text-align: right;">15.8 cm</td>
+<td style="text-align: right;">19.7</td>
+</tr>
+<tr>
+<td>kick</td>
+<td style="text-align: right;">13.1 cm</td>
+<td style="text-align: right;">17.9</td>
+</tr>
+<tr>
+<td>jump</td>
+<td style="text-align: right;">11.9 cm</td>
+<td style="text-align: right;">15.5</td>
+</tr>
+</tbody>
+</table>
+<p>These two RMSE columns are <strong>not directly comparable</strong>. Stage 1 optimizes the
+exact position error being measured; GMR is rotation-weighted against its own
+scaled targets. GMR's advantage is visual — natural arm motion, grounded legs,
+plausible whole-body poses — not the number.</p>
+<p>A fresh, never-configured 38.3 s basketball BVH retargeted live through GMR at
+~380–550 FPS instantaneous on CPU in a single process. GMR is a real-time CPU
+retargeter.</p>
+<h2>5. Honest scope</h2>
+<ul>
+<li>Kinematics only. The output is a <em>kinematically feasible</em> trajectory, not a
+  dynamically executable one. Whether it is physically trackable is answered
+  in the separate physics-tracking report.</li>
+<li>GMR is external open-source work (Araújo, Ze, Xu, Wu, Liu — Stanford, ICRA
+  2026, MIT). Safe verbs: integrated, bridged, benchmarked. Not "developed GMR".</li>
+<li>The ~70 Hz figure is the GMR paper's benchmark, not a locally measured rate.
+  The locally measured 380–550 FPS is a different, render-free loop.</li>
+<li>No employer, title, team or dates. Self-directed project, AI-assisted
+  development.</li>
+</ul>
+<h2>6. Reproduce</h2>
+<pre><code class="language-bash">cd projects/humanoid-motion-retargeting
+./build.sh                         # env + editable install
+retarget-demo --config configs/clips.yaml                  # full run
+retarget-demo --config configs/clips.yaml --clips walk --max-frames 30 --no-render
+pytest tests/ -q                   # 12 tests, synthetic fixtures only
+scripts/build_demo_reel.sh         # 71 s frame-synced IK-vs-GMR reel
+</code></pre>
+<h2>7. Source map</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/motion_retargeting/bvh.py</code></td>
+<td>BVH parser + skeleton FK, channel-order Euler</td>
+</tr>
+<tr>
+<td><code>src/motion_retargeting/retarget.py</code></td>
+<td>per-limb scales, ground alignment, target generation</td>
+</tr>
+<tr>
+<td><code>src/motion_retargeting/ik.py</code></td>
+<td>bounded TRF IK over log-parameterized freeflyer</td>
+</tr>
+<tr>
+<td><code>src/motion_retargeting/pipeline.py</code></td>
+<td>clip runner: targets → IK → metrics → video</td>
+</tr>
+<tr>
+<td><code>src/motion_retargeting/render.py</code></td>
+<td>backend probe, G1 mesh renderer, stick figure, mp4 encode</td>
+</tr>
+<tr>
+<td><code>configs/robot.yaml</code></td>
+<td>task → Pinocchio BODY frame map (G1 23-DoF)</td>
+</tr>
+<tr>
+<td><code>configs/clips.yaml</code></td>
+<td>clips + IK weights</td>
+</tr>
+<tr>
+<td><code>output/*_metrics.json</code></td>
+<td>observed metrics per clip</td>
+</tr>
+</tbody>
+</table>
+  </article>
+  <nav class="report__pager" aria-label="Reports">
+    <span></span><a href="02-motion-physics.html"><small>Next report →</small>Retargeted motion under physics (G1, MuJoCo)</a>
+  </nav>
+</main>
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

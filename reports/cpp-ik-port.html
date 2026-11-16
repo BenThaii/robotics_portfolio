@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — C++ port — bounded differential IK / retargeting · Technical report</title>
+<meta name="description" content="Technical report: C++ port — bounded differential IK / retargeting.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.report{position:relative;z-index:1;max-width:980px;margin:0 auto;
+  padding:190px 32px 96px;color:var(--paper)}
+.report__kicker,.report__eyebrow{font-family:var(--display);font-size:12px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--faint);margin:0 0 18px}
+.report h1{font-family:var(--display);font-size:clamp(34px,5.4vw,64px);
+  line-height:1.02;letter-spacing:-.025em;font-weight:500;margin:0 0 38px;
+  color:var(--white);max-width:18ch}
+.report h2{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);
+  font-weight:500;letter-spacing:-.01em;margin:64px 0 18px;padding-top:26px;
+  border-top:1px solid var(--rule);color:var(--white)}
+.report h3{font-family:var(--display);font-size:19px;font-weight:500;margin:32px 0 12px}
+.report p,.report li{font-size:16px;line-height:1.75;color:var(--paper);max-width:78ch}
+.report p{margin:0 0 18px}
+.report ul,.report ol{padding-left:22px;margin:0 0 20px}
+.report li{margin:0 0 8px}
+.report a{text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:var(--rule);color:var(--white)}
+.report a:hover{text-decoration-color:var(--white)}
+.report strong{color:var(--white);font-weight:600}
+.report hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+.report code{font-family:var(--mono);font-size:.88em;color:var(--white);
+  background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px}
+.report pre{background:#0b0b0b;border:1px solid var(--rule);border-radius:4px;
+  padding:20px 22px;overflow-x:auto;margin:0 0 26px}
+.report pre code{background:none;padding:0;font-size:13px;line-height:1.65;color:var(--paper)}
+.report table{border-collapse:collapse;width:100%;margin:0 0 28px;font-size:14px}
+.report th,.report td{text-align:left;padding:11px 14px;
+  border-bottom:1px solid var(--rule);vertical-align:top}
+.report th{font-family:var(--display);font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--faint);font-weight:500;white-space:nowrap}
+.report td{color:var(--paper)}
+.report tbody tr:hover{background:rgba(255,255,255,.03)}
+.report__pager{display:flex;justify-content:space-between;gap:24px;
+  border-top:1px solid var(--rule);padding:28px 0 0;margin-top:72px}
+.report__pager a{font-family:var(--display);font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none}
+.report__pager small{display:block;color:var(--faint);font-size:11px;margin-bottom:6px}
+@media(max-width:720px){
+  .report{padding:132px 22px 72px}
+  .report table{font-size:12px;display:block;overflow-x:auto;white-space:nowrap}
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="index.html">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Technical reports
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="index.html">Index</a>
+    <a href="../motion-retargeting/">Project page</a>
+    <a href="../">Home</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="index.html">Reports index</a>
+  <a href="../motion-retargeting/">Project page</a>
+</div>
+<main class="report">
+  <p class="report__kicker">Technical report · 05 / 05</p>
+  <h1>C++ port — bounded differential IK / retargeting</h1>
+  <article class="report__body">
+<p>A dependency-free C++17 port of the core algorithm from
+<code>projects/humanoid-motion-retargeting/src/motion_retargeting/</code>. It exists as
+concrete C++ evidence for robotics roles that ask for C++ (NVIDIA, EngineAI,
+Meituan), not as a replacement for the Python pipeline.</p>
+<h2>What is ported, exactly</h2>
+<table>
+<thead>
+<tr>
+<th>Python source</th>
+<th>C++ header</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ik.py</code> — <code>RetargetIK</code></td>
+<td><code>include/retarget_ik/ik.hpp</code></td>
+<td>log-parameterised freeflyer, weighted residual stack, pelvis yaw via <code>log3</code>, posture regulariser, exact box bounds on actuated joints, warm start, two-bone arm target rebuild</td>
+</tr>
+<tr>
+<td><code>retarget.py</code></td>
+<td><code>include/retarget_ik/retarget.hpp</code></td>
+<td>BVH→robot axis map <code>(x,y,z)→(z,x,y)</code>, per-limb proportion matching, arm segment lengths/directions, ground alignment, pelvis yaw from hip rotation</td>
+</tr>
+<tr>
+<td><code>bvh.py</code> (model layer)</td>
+<td><code>include/retarget_ik/chain.hpp</code></td>
+<td>floating-base serial-chain FK with joint origins, axes, limits and named frames</td>
+</tr>
+</tbody>
+</table>
+<p>The three Python unit tests in <code>tests/test_ik.py</code> (reachable target, joint
+limits, yaw task) are ported one-for-one in <code>tests/test_retarget_ik.cpp</code>.</p>
+<h2>Honest scope</h2>
+<ul>
+<li><strong>Not a Pinocchio port.</strong> The chain FK covers only what the residual uses
+  (frame positions/rotations). It does not parse the G1 URDF or load meshes.
+  The unit-test two-link chain is the same URDF used by the Python tests.</li>
+<li><strong>Solver difference.</strong> Python calls scipy <code>least_squares(method="trf")</code> with
+  finite-difference Jacobians. This port uses the same residual and bounds with
+  a damped least-squares (Levenberg–Marquardt) loop and box projection. Same
+  bounded differential-IK formulation; not bit-identical to scipy TRF.</li>
+<li><strong>No BVH parser.</strong> BVH parsing stays in Python. This port starts at parsed
+  keypoint positions and optionally hip rotations.</li>
+<li>Kinematics only — no dynamics, balance, contact or torque limits.</li>
+</ul>
+<h2>Cross-check against the original Python solver</h2>
+<p><code>tests/crosscheck_python.py</code> runs the same two-link cases through the original
+scipy/Pinocchio implementation (requires the <code>motion-retargeting</code> conda env):</p>
+<pre><code class="language-bash">conda run -n motion-retargeting --no-capture-output python tests/crosscheck_python.py
+</code></pre>
+<p>Observed 2026-11-16:</p>
+<table>
+<thead>
+<tr>
+<th>case</th>
+<th>Python q_act</th>
+<th>C++ q_act</th>
+<th>task error (Python / C++)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reachable</td>
+<td>(0.020247, 1.348982)</td>
+<td>(0.020247, 1.348982)</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>yaw 0.7</td>
+<td>(0, −0)</td>
+<td>(0, −0)</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>unreachable (limit)</td>
+<td>(0.365762, 1.500000)</td>
+<td>(0.280254, 1.500000)</td>
+<td>0.2475 / 0.2228</td>
+</tr>
+</tbody>
+</table>
+<p>The reachable and yaw cases match exactly. The unreachable case has no unique
+solution: both solvers park joint 2 on its +1.5 rad limit (saturated = 1), but
+TRF and damped least squares settle at different joint-1 values. This is the
+expected consequence of the solver difference above, not a discrepancy in the
+residual or bounds.</p>
+<h2>Build and run</h2>
+<pre><code class="language-bash">cd portfolio_docs/cpp
+make            # builds build/retarget_cli and build/test_retarget_ik
+make test       # runs the ported unit tests
+make run        # CLI demo + target-builder demo
+</code></pre>
+<p>Or with CMake:</p>
+<pre><code class="language-bash">cmake -S . -B build-cmake
+cmake --build build-cmake
+ctest --test-dir build-cmake --output-on-failure
+</code></pre>
+<p>Requires only a C++17 compiler (g++ or clang++). No Eigen, Pinocchio, scipy or
+ROS needed.</p>
+<h2>Layout</h2>
+<pre><code>cpp/
+├── include/retarget_ik/
+│   ├── geometry.hpp   Vec3, Mat3, quaternion/rotvec, SO3 log, helpers
+│   ├── chain.hpp      floating-base serial chain, compose/decompose
+│   ├── ik.hpp         RetargetIK solver, residual stack, bounded LM solve
+│   └── retarget.hpp   coordinate map, limb scales, arm directions, targets
+├── apps/retarget_cli.cpp     demo CLI (demo / targets)
+├── tests/test_retarget_ik.cpp  ported unit tests
+├── Makefile / CMakeLists.txt
+└── README.md
+</code></pre>
+  </article>
+  <nav class="report__pager" aria-label="Reports">
+    <a href="04-robot-arm.html"><small>← Previous report</small>UR5e manipulation with MoveIt 2</a>
+  </nav>
+</main>
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>
