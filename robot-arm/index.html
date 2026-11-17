@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ben Thai — Robot Arm · MoveIt 2 Stack</title>
-<meta name="description" content="UR5e in Gazebo with ros2_control + MoveIt 2: kinematics, planning-scene collision objects, perception-driven pick-and-place capstone verified passing in simulation.">
+<meta name="description" content="UR5e in Gazebo with ros2_control + MoveIt 2: kinematics, planning-scene collision objects, perception-driven pick-and-place verified in simulation.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
@@ -24,7 +24,7 @@
     <a href="#stack">Stack</a>
     <a href="#mission">Mission</a>
     <a href="../reports/04-robot-arm.html">Technical report</a>
-    <a href="../motion-retargeting/">Next →</a>
+    <a href="../imitation-learning/">Next →</a>
   </div>
   <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
 </nav>
@@ -32,9 +32,9 @@
   <a href="../">← All projects</a>
   <a href="#perception">Perception</a>
   <a href="#stack">The stack</a>
-  <a href="#mission">Capstone mission</a>
+  <a href="#mission">The mission</a>
   <a href="../reports/04-robot-arm.html">Technical report</a>
-  <a href="../motion-retargeting/">Next project →</a>
+  <a href="../imitation-learning/">Next project →</a>
 </div>
 
 <section class="hero hero--stage">
@@ -48,11 +48,6 @@
     <p class="hero__kicker">04 / Simulation · UR5e · Gazebo</p>
     <h1 class="hero__title">A robot arm that sees, plans and grasps.</h1>
     <p class="hero__desc">UR5e in Gazebo with ros2_control + MoveIt 2 — the pick target comes from the camera, not a hardcoded pose.</p>
-    <div class="hero__result">
-      <span class="n">6/6</span>
-      <span class="l">capstone stages passed · 92 s one-take mission</span>
-      <span class="e">Observed</span>
-    </div>
   </div>
   <a class="hero__cta" href="#mission">Watch the mission
     <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
@@ -62,20 +57,18 @@
 <div class="wrap">
 
 <div class="legend">
-  <span class="badge"><b>6/6</b> capstone stages passed <span class="ev">Observed</span></span>
-  <span class="badge"><b>92 s</b> full mission, one take <span class="ev">Observed</span></span>
   <span class="badge"><b>1</b> camera-derived grasp target, never hardcoded <span class="ev">Observed</span></span>
-  <span class="badge"><b>PASS</b> verdict recorded in the clip <span class="ev">Observed</span></span>
+  <span class="badge">planning scene: collision objects added <b>at runtime</b> <span class="ev">Observed</span></span>
 </div>
 
 <h2 id="perception" class="first">Camera → detection → mask → collision object</h2>
-<p class="lead">The capstone's perception stage: a Gazebo camera frame, the detected target's
+<p class="lead">The perception stage: a Gazebo camera frame, the detected target's
 mask, and the blend — the mask becomes the planning-scene collision object the arm plans around
 and grasps.</p>
 <figure>
   <img src="../assets/fig/arm_perception.png" alt="Gazebo camera frame with YOLO detection box, colorized mask, blended overlay">
   <figcaption>left: camera frame with detection box · middle: predicted mask · right: blend ·
-  frame from the live capstone run</figcaption>
+  frame from the live demo run</figcaption>
 </figure>
 
 <h2 id="stack">The stack</h2>
@@ -89,35 +82,35 @@ and grasps.</p>
   <div class="card"><div class="n">03</div><h3>Perception-driven targets</h3>
     <p>The pick target comes from the camera mask — not a hardcoded pose — and is handed to the
     planner as a grasp goal.</p></div>
-  <div class="card"><div class="n">04</div><h3>Pick-and-place capstone</h3>
-    <p>Full sense → plan → grasp → place cycle, verified passing in simulation.</p></div>
+  <div class="card"><div class="n">04</div><h3>Pick-and-place mission</h3>
+    <p>Full sense → plan → grasp → place cycle, verified in simulation.</p></div>
 </div>
 
-<h2 id="mission">The capstone mission, end to end</h2>
+<h2 id="mission">The mission, end to end</h2>
 <p class="lead"><strong>One take of the full sense → plan → grasp → place cycle</strong>, with the grasp target arriving from the camera.</p>
 <div class="video-card">
   <video autoplay muted playsinline loop controls preload="none" poster="../assets/poster/ur5e_pick_place.jpg">
     <source src="../assets/video/ur5e_pick_place.mp4" type="video/mp4">
   </video>
-  <div class="cap"><span>ur5e_pick_place.mp4 · 92 s · 1.5× · title card → mission → verdict</span>
-    <span>i05 VERDICT: PASS · 6/6 stages</span></div>
+  <div class="cap"><span>ur5e_pick_place.mp4 · 92 s · 1.5× · sense → plan → grasp → place</span>
+    <span>camera-derived target · simulation</span></div>
 </div>
 
 <div class="scope">
   <h3>Honest scope — what this is NOT</h3>
   <p><strong>Simulation only</strong> — no real arm in the loop for this stack. The perception
-  figure is from the live capstone run inside Gazebo.</p>
+  figure is from the demo run inside Gazebo.</p>
 </div>
 
 <div class="pager">
   <a href="../mobile-robot/"><small>← Previous project</small>RGB-D SLAM &amp; navigation</a>
-  <a href="../motion-retargeting/"><small>Next project →</small>Motion retargeting</a>
+  <a href="../imitation-learning/"><small>Next project →</small>Imitation learning</a>
 </div>
 
 <footer>
   <div class="cols">
     <div>Ben Thai · robotics portfolio · 2026</div>
-    <div><a href="../">← All projects</a> · <a href="../reports/04-robot-arm.html">Technical report</a> · <a href="https://github.com/BenThaii/ur5e-moveit-manipulation">GitHub Code ↗</a> · <a href="../motion-retargeting/">Next: motion retargeting →</a></div>
+    <div><a href="../">← All projects</a> · <a href="../reports/04-robot-arm.html">Technical report</a> · <a href="https://github.com/BenThaii/ur5e-moveit-manipulation">GitHub Code ↗</a> · <a href="../imitation-learning/">Next: imitation learning →</a></div>
   </div>
   <p class="fine">UR5e · ros2_control · MoveIt 2 · Gazebo · YOLO-segmentation perception</p>
 </footer>

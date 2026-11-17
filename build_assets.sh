@@ -136,6 +136,24 @@ drawtext=fontfile=$FONT:text='neural policy @ 50 Hz, dq=0':fontsize=18:fontcolor
 }
 encode_tri "$IL/box_gmr_3pane.mp4" track_il_box 20
 
+# Hero for the imitation-learning project: the policy pane alone, 16:9.
+encode_hero_il() { # <in>
+  local in="$1" out="$A/video/hero_il.mp4"
+  [ -s "$in" ] || { echo "MISSING $in" >&2; return 0; }
+  if [ ! -s "$out" ]; then
+    ffmpeg -y -v error -nostdin -i "$in" -vf "crop=853:480:1706:0,\
+scale=1280:720:flags=lanczos" -c:v libx264 -preset medium -crf 26 -an \
+      -movflags +faststart "$out"
+    echo "video: hero_il ($(du -h "$out" | cut -f1))"
+  fi
+  if [ ! -s "$A/poster/hero_il.jpg" ]; then
+    ffmpeg -y -v error -nostdin -ss 20 -i "$out" -frames:v 1 -q:v 3 \
+      "$A/poster/hero_il.jpg"
+    echo "poster: hero_il"
+  fi
+}
+encode_hero_il "$IL/box_gmr_3pane.mp4"
+
 # --- Sim-demo captures (experiments/captures-2026-11-15) ---------------------
 # Produced clips already carry title/verdict cards + 1.5x speed, so these are
 # straight transcodes; never upscale (native width kept), crf 24, faststart.

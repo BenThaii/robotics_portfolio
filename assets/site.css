@@ -183,6 +183,7 @@ video{background:#000}
 .video-card video,.reel video,.card video,#herovideo{aspect-ratio:16/9}
 .reel.sbs video,.card video.sbs,.cell video,#herovideo{aspect-ratio:32/9}
 .reel.tri video{aspect-ratio:16/3}
+.video-card.tri video{aspect-ratio:16/3}
 figure,.figure{background:none;border:0;border-radius:0;padding:0;margin:0 0 10px}
 figure img,.figure img{width:100%;height:auto;background:#000;border:0;border-radius:0}
 figcaption,.cap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;

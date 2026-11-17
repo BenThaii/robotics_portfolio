@@ -1,6 +1,6 @@
 # Robotics Portfolio
 
-A static portfolio site presenting four robotics builds, with recorded video
+A static portfolio site presenting five robotics builds, with recorded video
 evidence for every reported result.
 
 ## What's here
@@ -11,6 +11,7 @@ evidence for every reported result.
 | `motion-physics/` | Those trajectories executed on a 29-DoF G1 in MuJoCo under explicit torque PD |
 | `mobile-robot/` | RTAB-Map RGB-D SLAM and Nav2 navigation on a real mobile base |
 | `robot-arm/` | A MoveIt 2 pick-and-place stack in simulation |
+| `imitation-learning/` | A 50 Hz neural policy distilled from the 500 Hz tracking teacher, with the full BC/PPO ledger |
 
 `assets/` holds the web-encoded videos, poster frames, plots and figures.
 `build_assets.sh` rebuilds them from the project outputs.
