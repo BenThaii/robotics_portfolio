@@ -78,7 +78,7 @@
   <h1>UR5e manipulation with MoveIt 2</h1>
   <article class="report__body">
 <p><strong>Project:</strong> Five-phase industrial-arm program (i01–i05) on a simulated UR5e,
-ending in a perception-driven pick-and-place capstone.
+ending in a perception-driven pick-and-place mission.
 <strong>Demo:</strong> <a href="https://benthaii.github.io/robotics_portfolio/robot-arm/">https://benthaii.github.io/robotics_portfolio/robot-arm/</a>
 <strong>Scope:</strong> Gazebo simulation only. No physical arm was driven.</p>
 <hr />
@@ -110,11 +110,11 @@ ending in a perception-driven pick-and-place capstone.
 </tr>
 <tr>
 <td>i05</td>
-<td>Pick-and-place capstone — sense → plan → grasp → place</td>
+<td>Pick-and-place mission — sense → plan → grasp → place</td>
 </tr>
-</tbody>
+
 </table>
-<p>The capstone was executed live twice with two passing runs.</p>
+<p>The mission ran twice in the live sim, both times end to end.</p>
 <h2>2. Stack</h2>
 <p>ROS 2 Jazzy · MoveIt 2 · ros2_control · Gazebo (gz sim) · UR5e URDF ·
 RGB-D perception (camera + depth pipeline) · YOLO-segmentation target mask.</p>
@@ -130,12 +130,11 @@ RGB-D perception (camera + depth pipeline) · YOLO-segmentation target mask.</p>
 <p>MoveIt 2 planning-scene collision objects are added and updated at runtime, so
 plans respect the changing scene rather than a static world model.</p>
 <h2>4. Result</h2>
-<p>OBSERVED from the live capstone run:</p>
+<p>OBSERVED from the live mission run:</p>
 <ul>
-<li><strong>6/6 capstone stages passed</strong></li>
-<li><strong>92 s</strong> full mission, one take</li>
+<li><strong>Camera → plan → grasp → place</strong> completed end to end</li>
 <li><strong>1</strong> camera-derived grasp target — never hardcoded</li>
-<li><strong>PASS</strong> verdict recorded in the clip</li>
+<li><strong>Collision objects</strong> added to the planning scene at runtime</li>
 </ul>
 <p>The perception figure shows the live run: camera frame with detection box,
 predicted mask, and the blend; the mask becomes the planning-scene object the
