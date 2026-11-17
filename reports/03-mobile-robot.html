@@ -123,8 +123,9 @@ drives completed with zero collisions.</p>
 <p><strong>Predict-then-run discipline.</strong> Every drive had a written expected observation;
 surprises became numbered findings with root causes. Failure modes were
 compared across sim and real — the textureless sim rejected all 19 global loop
-closures (texture starvation), while the real room showed the opposite failure
-(≈134 feature matches, &lt;20 geometric inliers).</p>
+closure hypotheses (≈134 word matches but &lt;20 geometric inliers — texture
+starvation), while the textured real room accepted them freely (97 and 24
+global links in the day-one dbs' Link tables).</p>
 <h2>5. Results</h2>
 <p>OBSERVED, read from the RTAB-Map pose-graph database and the final Nav2 run.</p>
 <table>
@@ -136,7 +137,7 @@ closures (texture starvation), while the real room showed the opposite failure
 </thead>
 <tbody>
 <tr>
-<td>accepted global loop closures, final session</td>
+<td>accepted loop-closure links, final session (proximity, db Link table)</td>
 <td><strong>174</strong> (17 more in a second session)</td>
 </tr>
 <tr>

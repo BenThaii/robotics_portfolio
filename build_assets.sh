@@ -111,6 +111,31 @@ terminal_live.mp4       track_terminal 0.62
 basketball_live_gmr.mp4 bball_gmr      0.30
 PHYSICS
 
+# --- Imitation-learning 3-pane (projects/g1-il-tracking) ---------------------
+# The raw render is 2560x496 (three 853x480 panes + its own 16 px caption
+# strip): crop the strip off, scale to 1600x300, burn the site's pane labels.
+IL="$(cd "$HOME/ben_robotics/projects/g1-il-tracking/output" && pwd)"
+encode_tri() { # <in> <base> <poster-ss>
+  local in="$1" base="$2" ss="$3"
+  [ -s "$in" ] || { echo "MISSING $in" >&2; return 0; }
+  if [ ! -s "$A/video/$base.mp4" ]; then
+    ffmpeg -y -v error -nostdin -i "$in" -vf "crop=2560:480:0:0,\
+scale=1600:300:flags=lanczos,\
+drawtext=fontfile=$FONT:text='GMR reference':fontsize=18:fontcolor=white:box=1:boxcolor=0x1c1b19@0.62:boxborderw=8:x=16:y=16,\
+drawtext=fontfile=$FONT:text='teacher · 500 Hz PD':fontsize=18:fontcolor=white:box=1:boxcolor=0x1c1b19@0.62:boxborderw=8:x=549:y=16,\
+drawtext=fontfile=$FONT:text='neural policy @ 50 Hz, dq=0':fontsize=18:fontcolor=white:box=1:boxcolor=0x1c1b19@0.62:boxborderw=8:x=1082:y=16" \
+      -c:v libx264 -preset medium -crf 24 -an -movflags +faststart \
+      "$A/video/$base.mp4"
+    echo "video: $base ($(du -h "$A/video/$base.mp4" | cut -f1))"
+  fi
+  if [ ! -s "$A/poster/$base.jpg" ]; then
+    ffmpeg -y -v error -nostdin -ss "$ss" -i "$A/video/$base.mp4" \
+      -frames:v 1 -q:v 3 "$A/poster/$base.jpg"
+    echo "poster: $base"
+  fi
+}
+encode_tri "$IL/box_gmr_3pane.mp4" track_il_box 20
+
 # --- Sim-demo captures (experiments/captures-2026-11-15) ---------------------
 # Produced clips already carry title/verdict cards + 1.5x speed, so these are
 # straight transcodes; never upscale (native width kept), crf 24, faststart.
