@@ -23,6 +23,7 @@
     <a href="#map">Map</a>
     <a href="#cloud">Cloud</a>
     <a href="#numbers">Numbers</a>
+    <a href="#sfm">Depth anchor</a>
     <a href="../reports/03-mobile-robot.html">Technical report</a>
     <a href="../robot-arm/">Next →</a>
   </div>
@@ -35,6 +36,7 @@
   <a href="#map">Occupancy grid</a>
   <a href="#cloud">Fused cloud</a>
   <a href="#sim">Gazebo twin</a>
+  <a href="#sfm">Depth anchor</a>
   <a href="../reports/03-mobile-robot.html">Technical report</a>
   <a href="../robot-arm/">Next project →</a>
 </div>
@@ -134,12 +136,32 @@ robot, reproducible by anyone with the repo.</p>
     <span><span class="ev">SIM</span> mission summary: 5/5 SUCCEEDED</span></div>
 </div>
 
+<h2 id="sfm">Structure from motion — what depth actually buys you</h2>
+<p class="lead">The twin's mapping drive (p08, 376 keyframes) also answers a harder question:
+<strong>how much of the map do the images recover on their own?</strong> Bundle adjustment fed
+image matches alone — depth used only to <em>initialize</em> the points — converges happily to
+0.35 px while the map silently warps: <strong>shape error 0.25 m, scale 0.78, loop gap 5.1 cm</strong>.
+Anchoring every observation with a <strong>log-depth term</strong> moves the depth signal into the
+cost itself, and the same problem locks to <strong>0.4 mm at scale 1.0000</strong> (loop gap back
+to 3.2 mm). One ablation, two cost functions — the video shows both, aligned into the reference
+frame, with the numbers on screen.</p>
+<div class="video-card">
+  <video controls preload="none" poster="../assets/poster/p08_sfm_ba.jpg">
+    <source src="../assets/video/p08_sfm_ba_before_after.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>p08_sfm_ba_before_after.mp4 · 33 s · red = image-only BA · green = depth-anchored BA · 0.25 m → 0.4 mm shape error</span>
+    <span><span class="ev">SIM</span> p08 Gazebo drive · <a href="../assets/video/p08_sfm_ba_before_after.mp4" download>video ↓</a></span></div>
+</div>
+
 <div class="scope">
   <h3>Honest scope — what this is NOT</h3>
   <p>Numbers are read from the RTAB-Map pose-graph database, not eyeballed —
   <strong>0 collisions across 3 guarded drives</strong>. The map, cloud and Nav2 goal error
   above are from <strong>real hardware</strong>; the waypoint mission is a
-  <strong>Gazebo simulation</strong> twin of the same pipeline, not hardware.</p>
+  <strong>Gazebo simulation</strong> twin of the same pipeline, not hardware.
+  The structure-from-motion ablation is likewise <strong>simulation</strong>
+  (the twin's p08 mapping drive): RTAB-Map's optimized poses are the reference
+  the two bundle-adjustment solutions are measured against, not a hardware claim.</p>
 </div>
 
 <div class="pager">
