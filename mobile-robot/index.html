@@ -157,27 +157,19 @@ frame, with the numbers on screen.</p>
 
 <h2 id="ba">Depth-anchored BA — on the robot itself</h2>
 <p class="lead">The twin's demo above made the case in simulation; <strong>the robot
-answers it on hardware</strong>. A 101-second annotated drive — two laps so every wall
-gets re-observed — while RTAB-Map builds the map live (401 keyframes, 70 loop closures);
-the drive's own bag then feeds a depth-anchored bundle adjustment: <strong>27,755
-observations, reprojection 0.326 → 0.219 px, 99.9% of measured depth kept, trajectory
-within 3.1 cm RMS of the SLAM reference</strong>. A second hardware drive runs the full
-4-mode ablation in the figures below: <strong>anchored BA keeps 99.7% of measured depth,
-free BA 21% — free warps the room chasing a 0.04 px reprojection edge</strong>. On
-screen: the D435 feed with depth inset, the growing grid with trail and field-of-view
-wedge, a live event feed (loop-closure bursts, turn completions, revisits) and BA result
-tiles.</p>
+answers it on hardware</strong>. Result first, from the 18,304-observation ablation
+drive: <strong>the robot's own photos with every depth claim marked, all observations
+as measured-vs-claimed depth, and the measured room rebuilt in 3-D with real colours</strong> —
+free BA's claims streak metres off the measurement, depth-anchored BA's sit on it.
+<strong>Median claimed-vs-measured gap 0.71 m vs 0.024 m; 99.7% of measured depth kept
+vs 21.0%</strong>.</p>
 <div class="video-card">
-  <video controls preload="none" poster="../assets/poster/hw_depth_anchor.jpg">
-    <source src="../assets/video/hw_depth_anchor.mp4" type="video/mp4">
+  <video controls preload="none" poster="../assets/poster/hw_ba_explained_v3.jpg">
+    <source src="../assets/video/hw_ba_explained_v3.mp4" type="video/mp4">
   </video>
-  <div class="cap"><span>hw_depth_anchor.mp4 · 101 s · D435 feed → live grid → event feed → BA tiles</span>
-    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_depth_anchor.mp4" download>video ↓</a></span></div>
+  <div class="cap"><span>hw_ba_explained_v3.mp4 · 88 s · the robot's photos → depth scatter → measured room in 3-D</span>
+    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_ba_explained_v3.mp4" download>video ↓</a></span></div>
 </div>
-<figure class="map">
-  <img src="../assets/fig/hw_ba_drive_map.png" alt="Occupancy grid with the RTAB-Map trajectory and the depth-anchored BA camera path">
-  <figcaption>the recorded drive · blue = RTAB-Map trajectory (401 keyframes, 70 loop closures) · orange = depth-anchored BA camera path, 30.7 mm RMS · start = revisit (final gap 2 cm)</figcaption>
-</figure>
 <div class="statgrid">
   <div class="statcard"><div class="big">0.219 px</div>
     <div class="lab">reprojection RMSE after depth-anchored BA — 0.326 px before, over 27,755 trimmed observations</div></div>
@@ -186,6 +178,26 @@ tiles.</p>
   <div class="statcard"><div class="big">3.1 cm</div>
     <div class="lab">BA trajectory RMS vs the RTAB-Map optimized poses, 201 exported keyframes</div></div>
 </div>
+<p class="lead">The procedure behind those claims: <strong>an annotated hardware drive —
+two laps so every wall gets re-observed — while RTAB-Map builds the map live</strong>
+(401 keyframes, 70 loop closures). That drive's bag feeds a depth-anchored bundle
+adjustment: <strong>27,755 observations, reprojection 0.326 → 0.219 px, 99.9% of
+measured depth kept, trajectory within 3.1 cm RMS of the SLAM reference</strong> — the
+numbers above. The result video's 18,304-observation run and the 4-mode ablation below
+come from a second drive through the same pipeline. On screen: the D435 feed with depth
+inset, the growing grid with trail and field-of-view wedge, a live event feed
+(loop-closure bursts, turn completions, revisits) and BA result tiles.</p>
+<div class="video-card">
+  <video controls preload="none" poster="../assets/poster/hw_depth_anchor.jpg">
+    <source src="../assets/video/hw_depth_anchor.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>hw_depth_anchor.mp4 · 101 s · the procedure: D435 feed → live grid → event feed → BA tiles</span>
+    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_depth_anchor.mp4" download>video ↓</a></span></div>
+</div>
+<figure class="map">
+  <img src="../assets/fig/hw_ba_drive_map.png" alt="Occupancy grid with the RTAB-Map trajectory and the depth-anchored BA camera path">
+  <figcaption>the recorded drive · blue = RTAB-Map trajectory (401 keyframes, 70 loop closures) · orange = depth-anchored BA camera path, 30.7 mm RMS · start = revisit (final gap 2 cm)</figcaption>
+</figure>
 <div class="grid2">
   <figure>
     <img src="../assets/fig/hw_ba_ablation.png" alt="4-mode depth-anchored BA ablation on real-robot data">
@@ -196,10 +208,6 @@ tiles.</p>
     <figcaption>per-observation depth error, same 18,304 observations — anchored hugs the 10% line; free trades depth for a 0.04 px reprojection edge</figcaption>
   </figure>
 </div>
-<figure class="map">
-  <img src="../assets/fig/hw_ba_pointclouds.png" alt="Same landmarks reconstructed by anchored and free BA, coloured by disagreement with measured depth">
-  <figcaption>same landmarks, two BA modes · colour = disagreement with the measured depth · anchored stays blue, free drifts</figcaption>
-</figure>
 
 <div class="scope">
   <h3>Honest scope — what this is NOT</h3>
