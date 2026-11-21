@@ -95,6 +95,8 @@ RTAB-Map on the real robot</strong>.</p>
 <li><strong>Sensors:</strong> Intel RealSense D435 (RGB-D, colour-aligned), RPLiDAR A3</li>
 <li><strong>SLAM:</strong> RTAB-Map 0.21.1 — RGB-D, pose graph, loop closure</li>
 <li><strong>Navigation:</strong> Nav2 on the RTAB-Map occupancy grid</li>
+<li><strong>Geometry check:</strong> custom depth-anchored bundle adjustment
+  (offline, on the recorded bags)</li>
 <li><strong>Simulation twin:</strong> ROS 2 Jazzy + Gazebo, map_server + AMCL + Nav2</li>
 </ul>
 <h2>3. Pipeline</h2>
@@ -104,6 +106,7 @@ RTAB-Map on the real robot</strong>.</p>
   → pose-graph optimization                 → corrected trajectory + 3-D cloud
   → occupancy grid (depth → ray tracing)   → Nav2 costmaps
   → Nav2 goals                              → guarded drives with safety stops
+  → (offline) depth-anchored bundle adjustment → map geometry verified against the measurements
 </code></pre>
 <h2>4. Engineering work that mattered</h2>
 <p><strong>Sensor-frame bug found from the point cloud alone.</strong> A custom RealSense
@@ -169,10 +172,20 @@ global links in the day-one dbs' Link tables).</p>
 <p>A Gazebo twin loads the saved map into <code>map_server + AMCL</code> and runs Nav2 through
 five waypoints in a pillar field: <strong>5/5 waypoints reached</strong>. This is simulation,
 reproducible from the repo, not hardware.</p>
+<p>The depth anchor then moved from the twin to hardware. A recorded drive — two laps
+of the room so every wall gets re-observed — feeds a custom depth-anchored bundle
+adjustment on the same RGB-D observations: <strong>27,755 trimmed observations,
+reprojection RMSE 0.326 → 0.219 px, 99.9% of observations within 10% of measured depth
+(median 0.25%), trajectory within 3.1 cm RMS of the RTAB-Map optimized poses</strong>.
+A second drive runs the full 4-mode ablation: <strong>anchored BA keeps 99.7% of
+measured depth, fully free BA 21%</strong> — free wins reprojection by 0.04 px while
+warping the room; the anchor buys a metric map for 0.04 px. RTAB-Map's optimized poses
+are the reference in both tests, not independent ground truth.</p>
 <h2>6. Honest scope</h2>
 <ul>
-<li>Real hardware: the map, fused cloud and Nav2 goal error. Simulation: the
-  waypoint mission. Labelled separately throughout.</li>
+<li>Real hardware: the map, fused cloud, Nav2 goal error and the depth-anchored BA
+  results (two recorded drives). Simulation: the waypoint mission and the p08
+  structure-from-motion ablation. Labelled separately throughout.</li>
 <li>This is a learning rig on lab hardware — not a product, no users, no fleet.</li>
 <li>Self-directed program, no employer/title/dates. AI coding agents wrote
   substantial code under direction; the verifiable contribution is program

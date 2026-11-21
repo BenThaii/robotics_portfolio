@@ -24,6 +24,7 @@
     <a href="#cloud">Cloud</a>
     <a href="#numbers">Numbers</a>
     <a href="#sfm">Depth anchor</a>
+    <a href="#ba">BA on hardware</a>
     <a href="../reports/03-mobile-robot.html">Technical report</a>
     <a href="../robot-arm/">Next →</a>
   </div>
@@ -37,6 +38,7 @@
   <a href="#cloud">Fused cloud</a>
   <a href="#sim">Gazebo twin</a>
   <a href="#sfm">Depth anchor</a>
+  <a href="#ba">BA on hardware</a>
   <a href="../reports/03-mobile-robot.html">Technical report</a>
   <a href="../robot-arm/">Next project →</a>
 </div>
@@ -153,6 +155,52 @@ frame, with the numbers on screen.</p>
     <span><span class="ev">SIM</span> p08 Gazebo drive · <a href="../assets/video/p08_sfm_ba_before_after.mp4" download>video ↓</a></span></div>
 </div>
 
+<h2 id="ba">Depth-anchored BA — on the robot itself</h2>
+<p class="lead">The twin's demo above made the case in simulation; <strong>the robot
+answers it on hardware</strong>. A 101-second annotated drive — two laps so every wall
+gets re-observed — while RTAB-Map builds the map live (401 keyframes, 70 loop closures);
+the drive's own bag then feeds a depth-anchored bundle adjustment: <strong>27,755
+observations, reprojection 0.326 → 0.219 px, 99.9% of measured depth kept, trajectory
+within 3.1 cm RMS of the SLAM reference</strong>. A second hardware drive runs the full
+4-mode ablation in the figures below: <strong>anchored BA keeps 99.7% of measured depth,
+free BA 21% — free warps the room chasing a 0.04 px reprojection edge</strong>. On
+screen: the D435 feed with depth inset, the growing grid with trail and field-of-view
+wedge, a live event feed (loop-closure bursts, turn completions, revisits) and BA result
+tiles.</p>
+<div class="video-card">
+  <video controls preload="none" poster="../assets/poster/hw_depth_anchor.jpg">
+    <source src="../assets/video/hw_depth_anchor.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>hw_depth_anchor.mp4 · 101 s · D435 feed → live grid → event feed → BA tiles</span>
+    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_depth_anchor.mp4" download>video ↓</a></span></div>
+</div>
+<figure class="map">
+  <img src="../assets/fig/hw_ba_drive_map.png" alt="Occupancy grid with the RTAB-Map trajectory and the depth-anchored BA camera path">
+  <figcaption>the recorded drive · blue = RTAB-Map trajectory (401 keyframes, 70 loop closures) · orange = depth-anchored BA camera path, 30.7 mm RMS · start = revisit (final gap 2 cm)</figcaption>
+</figure>
+<div class="statgrid">
+  <div class="statcard"><div class="big">0.219 px</div>
+    <div class="lab">reprojection RMSE after depth-anchored BA — 0.326 px before, over 27,755 trimmed observations</div></div>
+  <div class="statcard"><div class="big">99.9%</div>
+    <div class="lab">observations within 10% of the measured depth (median error 0.25%)</div></div>
+  <div class="statcard"><div class="big">3.1 cm</div>
+    <div class="lab">BA trajectory RMS vs the RTAB-Map optimized poses, 201 exported keyframes</div></div>
+</div>
+<div class="grid2">
+  <figure>
+    <img src="../assets/fig/hw_ba_ablation.png" alt="4-mode depth-anchored BA ablation on real-robot data">
+    <figcaption>4-mode ablation, second hardware drive, 18,304 observations — anchored keeps 99.7% of measured depth, free 21.0%</figcaption>
+  </figure>
+  <figure>
+    <img src="../assets/fig/hw_ba_depth_cdf.png" alt="Per-observation depth error CDF, depth-anchored vs free BA">
+    <figcaption>per-observation depth error, same 18,304 observations — anchored hugs the 10% line; free trades depth for a 0.04 px reprojection edge</figcaption>
+  </figure>
+</div>
+<figure class="map">
+  <img src="../assets/fig/hw_ba_pointclouds.png" alt="Same landmarks reconstructed by anchored and free BA, coloured by disagreement with measured depth">
+  <figcaption>same landmarks, two BA modes · colour = disagreement with the measured depth · anchored stays blue, free drifts</figcaption>
+</figure>
+
 <div class="scope">
   <h3>Honest scope — what this is NOT</h3>
   <p>Numbers are read from the RTAB-Map pose-graph database, not eyeballed —
@@ -162,6 +210,12 @@ frame, with the numbers on screen.</p>
   The structure-from-motion ablation is likewise <strong>simulation</strong>
   (the twin's p08 mapping drive): RTAB-Map's optimized poses are the reference
   the two bundle-adjustment solutions are measured against, not a hardware claim.</p>
+  <p>The <strong>depth-anchored BA results are real hardware</strong>, from two drives:
+  the annotated drive (27,755 trimmed observations) and the ablation drive (18,304
+  observations). As in the p08 ablation, <strong>RTAB-Map's optimized poses are the
+  reference</strong> the BA trajectory is measured against — a consistency check against
+  the same SLAM system, not independent ground truth. The trimmed sets cover the earlier
+  part of each drive, so the BA tiles in the video are final numbers, not a live curve.</p>
 </div>
 
 <div class="pager">
@@ -175,7 +229,8 @@ frame, with the numbers on screen.</p>
     <div><a href="../">← All projects</a> · <a href="../reports/03-mobile-robot.html">Technical report</a> · <a href="https://github.com/BenThaii/mobile-robot-rgbd-slam">GitHub Code ↗</a> · <a href="../robot-arm/">Next: robot arm →</a></div>
   </div>
   <p class="fine">RTAB-Map 0.21.1 · ROS 2 Foxy · Jetson Xavier NX · RealSense D435 (RGB-D,
-  colour-aligned) · RPLiDAR A3 · Nav2 · matching Gazebo track on ROS 2 Jazzy</p>
+  colour-aligned) · RPLiDAR A3 · Nav2 · matching Gazebo track on ROS 2 Jazzy ·
+  custom depth-anchored bundle adjustment</p>
 </footer>
 
 </div>
