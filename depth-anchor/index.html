@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — Depth-anchored Bundle Adjustment on a Real Robot</title>
+<meta name="description" content="Depth-anchored bundle adjustment on real hardware: anchoring every observation with a log-depth term keeps 99.7% of the robot's measured depth — free BA trades it away for reprojection.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="../">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      Depth-anchored BA
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="#result">Result</a>
+    <a href="#procedure">Procedure</a>
+    <a href="#ablation">Ablation</a>
+    <a href="../reports/03-mobile-robot.html">Technical report</a>
+    <a href="../motion-retargeting/">Next →</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="#result">Result</a>
+  <a href="#procedure">Procedure</a>
+  <a href="#ablation">Ablation</a>
+  <a href="../reports/03-mobile-robot.html">Technical report</a>
+  <a href="../motion-retargeting/">Next project →</a>
+</div>
+
+<section class="hero hero--stage">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/hero_ba.jpg">
+      <source src="../assets/video/hero_ba.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">06 / Real hardware · depth-anchored BA</p>
+    <h1 class="hero__title">Every depth claim, verified.</h1>
+    <p class="hero__desc">Free bundle adjustment trades the robot's measured depth away for reprojection — anchoring every observation keeps the map metric. Same 18,304 observations, same init, only the cost differs.</p>
+    <div class="hero__result">
+      <span class="n">2.4 cm</span>
+      <span class="l">median claimed-vs-measured gap · free BA 0.71 m</span>
+      <span class="e">Observed</span>
+    </div>
+  </div>
+  <a class="hero__cta" href="#result">See the results
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
+
+<div class="wrap">
+
+<div class="legend">
+  <span class="badge"><b>2.4 cm</b> median claimed-vs-measured gap <span class="ev">Observed</span></span>
+  <span class="badge"><b>99.7%</b> measured depth kept <span class="ev">Observed</span></span>
+  <span class="badge"><b>+0.04 px</b> reprojection paid vs free BA <span class="ev">Observed</span></span>
+</div>
+
+<h2 id="result" class="first">Depth-anchored BA — on the robot itself</h2>
+<p class="lead">The simulation twin (<a href="../mobile-robot/#sfm">p08 drive</a>) made the case;
+<strong>the robot answers it on hardware</strong>. Result first, from the 18,304-observation
+ablation drive: <strong>the robot's own photos with every depth claim marked, all observations
+as measured-vs-claimed depth, and the measured room rebuilt in 3-D with real colours</strong> —
+free BA's claims streak metres off the measurement, depth-anchored BA's sit on it.
+<strong>Median claimed-vs-measured gap 0.71 m vs 0.024 m; 99.7% of measured depth kept
+vs 21.0%</strong>.</p>
+<div class="video-card">
+  <video controls preload="none" poster="../assets/poster/hw_ba_explained_v3.jpg">
+    <source src="../assets/video/hw_ba_explained_v3.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>hw_ba_explained_v3.mp4 · 88 s · the robot's photos → depth scatter → measured room in 3-D</span>
+    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_ba_explained_v3.mp4" download>video ↓</a></span></div>
+</div>
+<div class="statgrid">
+  <div class="statcard"><div class="big">0.219 px</div>
+    <div class="lab">reprojection RMSE after depth-anchored BA — 0.326 px before, over 27,755 trimmed observations</div></div>
+  <div class="statcard"><div class="big">99.9%</div>
+    <div class="lab">observations within 10% of the measured depth (median error 0.25%)</div></div>
+  <div class="statcard"><div class="big">3.1 cm</div>
+    <div class="lab">BA trajectory RMS vs the RTAB-Map optimized poses, 201 exported keyframes</div></div>
+</div>
+
+<h2 id="procedure">The procedure — an annotated hardware drive</h2>
+<p class="lead">The procedure behind those claims: <strong>an annotated hardware drive —
+two laps so every wall gets re-observed — while RTAB-Map builds the map live</strong>
+(401 keyframes, 70 loop closures). That drive's bag feeds a depth-anchored bundle
+adjustment: <strong>27,755 observations, reprojection 0.326 → 0.219 px, 99.9% of
+measured depth kept, trajectory within 3.1 cm RMS of the SLAM reference</strong> — the
+numbers above. The result video's 18,304-observation run and the 4-mode ablation below
+come from a second drive through the same pipeline. On screen: the D435 feed with depth
+inset, the growing grid with trail and field-of-view wedge, a live event feed
+(loop-closure bursts, turn completions, revisits) and BA result tiles.</p>
+<div class="video-card">
+  <video controls preload="none" poster="../assets/poster/hw_depth_anchor.jpg">
+    <source src="../assets/video/hw_depth_anchor.mp4" type="video/mp4">
+  </video>
+  <div class="cap"><span>hw_depth_anchor.mp4 · 101 s · the procedure: D435 feed → live grid → event feed → BA tiles</span>
+    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_depth_anchor.mp4" download>video ↓</a></span></div>
+</div>
+<figure class="map">
+  <img src="../assets/fig/hw_ba_drive_map.png" alt="Occupancy grid with the RTAB-Map trajectory and the depth-anchored BA camera path">
+  <figcaption>the recorded drive · blue = RTAB-Map trajectory (401 keyframes, 70 loop closures) · orange = depth-anchored BA camera path, 30.7 mm RMS · start = revisit (final gap 2 cm)</figcaption>
+</figure>
+
+<h2 id="ablation">The ablation — four cost functions, one drive</h2>
+<p class="lead">The second drive runs the ablation matrix: free, anchored, and the two
+hybrid costs, over the same 18,304 observations with the same initialization. Anchoring
+costs <strong>+0.04 px reprojection</strong> against free BA and buys back
+<strong>99.7% of the measured depth</strong> — the CDF shows what that trade looks like
+per observation.</p>
+<div class="grid2">
+  <figure>
+    <img src="../assets/fig/hw_ba_ablation.png" alt="4-mode depth-anchored BA ablation on real-robot data">
+    <figcaption>4-mode ablation, second hardware drive, 18,304 observations — anchored keeps 99.7% of measured depth, free 21.0%</figcaption>
+  </figure>
+  <figure>
+    <img src="../assets/fig/hw_ba_depth_cdf.png" alt="Per-observation depth error CDF, depth-anchored vs free BA">
+    <figcaption>per-observation depth error, same 18,304 observations — anchored hugs the 10% line; free trades depth for a 0.04 px reprojection edge</figcaption>
+  </figure>
+</div>
+
+<div class="scope">
+  <h3>Honest scope — what this is NOT</h3>
+  <p>The <strong>depth-anchored BA results are real hardware</strong>, from two drives:
+  the annotated drive (27,755 trimmed observations) and the ablation drive (18,304
+  observations). <strong>RTAB-Map's optimized poses are the reference</strong> the BA
+  trajectory is measured against — a consistency check against the same SLAM system,
+  not independent ground truth. The trimmed sets cover the earlier part of each drive,
+  so the BA tiles in the video are final numbers, not a live curve.</p>
+  <p>The comparison is one ablation, not two systems: <strong>same observations, same
+  initialization, only the depth term differs</strong>. Only the 2,105 landmarks carrying
+  observations move between the two solutions; the dense room on screen is the measured
+  map, identical in both panels of the video.</p>
+</div>
+
+<div class="pager">
+  <a href="../imitation-learning/"><small>← Previous project</small>Imitation learning</a>
+  <a href="../motion-retargeting/"><small>Next project →</small>Motion retargeting</a>
+</div>
+
+<footer>
+  <div class="cols">
+    <div>Ben Thai · robotics portfolio · 2026</div>
+    <div><a href="../">← All projects</a> · <a href="../mobile-robot/">Mobile-robot SLAM</a> · <a href="../reports/03-mobile-robot.html">Technical report</a> · <a href="https://github.com/BenThaii/mobile-robot-rgbd-slam">GitHub Code ↗</a> · <a href="../motion-retargeting/">Next: motion retargeting →</a></div>
+  </div>
+  <p class="fine">Kobuki + Jetson Xavier NX + RealSense D435 · custom depth-anchored bundle
+  adjustment (log-depth residual anchor) · RTAB-Map optimized poses as reference</p>
+</footer>
+
+</div>
+
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Six builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+      <li><a href="../imitation-learning/"><span class="num">05</span> Imitation learning</a></li>
+      <li><a href="../depth-anchor/"><span class="num">06</span> Depth-anchored BA</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

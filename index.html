@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ben Thai — Robotics</title>
-<meta name="description" content="Five end-to-end robotics builds by Ben Thai: humanoid motion retargeting, physics-based motion tracking, imitation learning, real-robot RGB-D SLAM and navigation, and MoveIt 2 manipulation.">
+<meta name="description" content="Six end-to-end robotics builds by Ben Thai: humanoid motion retargeting, physics-based motion tracking, imitation learning, real-robot RGB-D SLAM and navigation, MoveIt 2 manipulation, and depth-anchored bundle adjustment verified on hardware.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -23,6 +23,7 @@
     <a href="#p3">Mobile robot</a>
     <a href="#p4">Manipulation</a>
     <a href="#p5">Imitation learning</a>
+    <a href="#p6">Depth-anchored BA</a>
     <a href="#index">Index</a>
   </div>
   <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
@@ -33,21 +34,22 @@
   <a href="#p3">Mobile robot</a>
   <a href="#p4">Manipulation</a>
   <a href="#p5">Imitation learning</a>
+  <a href="#p6">Depth-anchored BA</a>
   <a href="#index">Index</a>
 </div>
 
 <!-- ------------------------------------------------------------ opening -->
 <section class="hero hero--open" id="top">
   <div class="hero__media">
-    <video muted loop playsinline autoplay preload="metadata" poster="assets/poster/hero_cloud.jpg">
-      <source src="assets/video/hero_cloud.mp4" type="video/mp4">
+    <video muted loop playsinline autoplay preload="metadata" poster="assets/poster/hero_ba.jpg">
+      <source src="assets/video/hero_ba.mp4" type="video/mp4">
     </video>
   </div>
   <div class="hero__scrim"></div>
   <div class="hero__content">
     <p class="hero__kicker">Ben Thai · Robotics portfolio · 2026</p>
     <h1 class="hero__title">Robots that see, move and act.</h1>
-    <p class="hero__desc">Five end-to-end builds. Real recorded footage — simulation and hardware, clearly labelled.</p>
+    <p class="hero__desc">Six end-to-end builds. Real recorded footage — simulation and hardware, clearly labelled.</p>
   </div>
   <a class="hero__cta" href="#p1">View the work
     <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
@@ -169,12 +171,36 @@
   </a>
 </section>
 
+<!-- ------------------------------------------------ 06 depth-anchor BA -->
+<section class="hero hero--stage" id="p6">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata"
+      poster="assets/poster/hw_ba_explained_v3.jpg">
+      <source src="assets/video/hw_ba_explained_v3.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">06 / Real hardware · depth-anchored BA</p>
+    <h2 class="hero__title">Depth-anchored BA</h2>
+    <p class="hero__desc">Free bundle adjustment trades the robot's measured depth away for reprojection — anchoring every observation keeps the map metric. Same observations, only the cost differs.</p>
+    <div class="hero__result">
+      <span class="n">2.4 cm</span>
+      <span class="l">median claimed-vs-measured gap · free BA 0.71 m</span>
+      <span class="e">Observed</span>
+    </div>
+  </div>
+  <a class="hero__cta" href="depth-anchor/">Explore project
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
+
 <!-- ------------------------------------------------------ light index -->
 <footer class="index" id="index">
   <div class="index__inner">
     <div>
       <h2 class="index__word">Ben<br>Thai</h2>
-      <p class="index__tag">Robots that see, move and act. Five builds, recorded end to end.</p>
+      <p class="index__tag">Robots that see, move and act. Six builds, recorded end to end.</p>
     </div>
     <ol class="index__list">
       <li><a href="motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
@@ -182,6 +208,7 @@
       <li><a href="mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
       <li><a href="robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
       <li><a href="imitation-learning/"><span class="num">05</span> Imitation learning</a></li>
+      <li><a href="depth-anchor/"><span class="num">06</span> Depth-anchored BA</a></li>
     </ol>
   </div>
   <div class="index__foot">

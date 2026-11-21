@@ -180,16 +180,18 @@ reprojection RMSE 0.326 → 0.219 px, 99.9% of observations within 10% of measur
 A second drive runs the full 4-mode ablation: <strong>anchored BA keeps 99.7% of
 measured depth, fully free BA 21%</strong> — free wins reprojection by 0.04 px while
 warping the room; the anchor buys a metric map for 0.04 px. RTAB-Map's optimized poses
-are the reference in both tests, not independent ground truth.</p>
+are the reference in both tests, not independent ground truth. The full result —
+explainer video, annotated procedure drive and ablation figures — has its own page:
+<a href="https://benthaii.github.io/robotics_portfolio/depth-anchor/">depth-anchored BA</a>.</p>
 <h2>6. Honest scope</h2>
 <ul>
 <li>Real hardware: the map, fused cloud, Nav2 goal error and the depth-anchored BA
   results (two recorded drives). Simulation: the waypoint mission and the p08
   structure-from-motion ablation. Labelled separately throughout.</li>
-<li>This is a learning rig on lab hardware — not a product, no users, no fleet.</li>
-<li>Self-directed program, no employer/title/dates. AI coding agents wrote
-  substantial code under direction; the verifiable contribution is program
-  design, execution, verification and debugging.</li>
+<li>This is a learning rig — not a product, no users, no fleet.</li>
+<li>Self-directed program — no employer, title or dates attached. AI coding agents
+  wrote substantial code under the author's direction; the verifiable contribution
+  is program design, execution, verification and debugging.</li>
 </ul>
 <h2>7. Reproduce</h2>
 <pre><code class="language-bash"># simulation track (ROS 2 Jazzy):
@@ -206,13 +208,15 @@ are the reference in both tests, not independent ground truth.</p>
   <div class="index__inner">
     <div>
       <h2 class="index__word">Ben<br>Thai</h2>
-      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+      <p class="index__tag">Robots that see, move and act. Six builds, recorded end to end.</p>
     </div>
     <ol class="index__list">
       <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
       <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
       <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
       <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+      <li><a href="../imitation-learning/"><span class="num">05</span> Imitation learning</a></li>
+      <li><a href="../depth-anchor/"><span class="num">06</span> Depth-anchored BA</a></li>
     </ol>
   </div>
   <div class="index__foot">

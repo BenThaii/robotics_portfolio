@@ -24,7 +24,7 @@
     <a href="#cloud">Cloud</a>
     <a href="#numbers">Numbers</a>
     <a href="#sfm">Depth anchor</a>
-    <a href="#ba">BA on hardware</a>
+    <a href="../depth-anchor/">BA on hardware</a>
     <a href="../reports/03-mobile-robot.html">Technical report</a>
     <a href="../robot-arm/">Next →</a>
   </div>
@@ -38,7 +38,7 @@
   <a href="#cloud">Fused cloud</a>
   <a href="#sim">Gazebo twin</a>
   <a href="#sfm">Depth anchor</a>
-  <a href="#ba">BA on hardware</a>
+  <a href="../depth-anchor/">BA on hardware</a>
   <a href="../reports/03-mobile-robot.html">Technical report</a>
   <a href="../robot-arm/">Next project →</a>
 </div>
@@ -157,57 +157,12 @@ frame, with the numbers on screen.</p>
 
 <h2 id="ba">Depth-anchored BA — on the robot itself</h2>
 <p class="lead">The twin's demo above made the case in simulation; <strong>the robot
-answers it on hardware</strong>. Result first, from the 18,304-observation ablation
-drive: <strong>the robot's own photos with every depth claim marked, all observations
-as measured-vs-claimed depth, and the measured room rebuilt in 3-D with real colours</strong> —
-free BA's claims streak metres off the measurement, depth-anchored BA's sit on it.
-<strong>Median claimed-vs-measured gap 0.71 m vs 0.024 m; 99.7% of measured depth kept
-vs 21.0%</strong>.</p>
-<div class="video-card">
-  <video controls preload="none" poster="../assets/poster/hw_ba_explained_v3.jpg">
-    <source src="../assets/video/hw_ba_explained_v3.mp4" type="video/mp4">
-  </video>
-  <div class="cap"><span>hw_ba_explained_v3.mp4 · 88 s · the robot's photos → depth scatter → measured room in 3-D</span>
-    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_ba_explained_v3.mp4" download>video ↓</a></span></div>
-</div>
-<div class="statgrid">
-  <div class="statcard"><div class="big">0.219 px</div>
-    <div class="lab">reprojection RMSE after depth-anchored BA — 0.326 px before, over 27,755 trimmed observations</div></div>
-  <div class="statcard"><div class="big">99.9%</div>
-    <div class="lab">observations within 10% of the measured depth (median error 0.25%)</div></div>
-  <div class="statcard"><div class="big">3.1 cm</div>
-    <div class="lab">BA trajectory RMS vs the RTAB-Map optimized poses, 201 exported keyframes</div></div>
-</div>
-<p class="lead">The procedure behind those claims: <strong>an annotated hardware drive —
-two laps so every wall gets re-observed — while RTAB-Map builds the map live</strong>
-(401 keyframes, 70 loop closures). That drive's bag feeds a depth-anchored bundle
-adjustment: <strong>27,755 observations, reprojection 0.326 → 0.219 px, 99.9% of
-measured depth kept, trajectory within 3.1 cm RMS of the SLAM reference</strong> — the
-numbers above. The result video's 18,304-observation run and the 4-mode ablation below
-come from a second drive through the same pipeline. On screen: the D435 feed with depth
-inset, the growing grid with trail and field-of-view wedge, a live event feed
-(loop-closure bursts, turn completions, revisits) and BA result tiles.</p>
-<div class="video-card">
-  <video controls preload="none" poster="../assets/poster/hw_depth_anchor.jpg">
-    <source src="../assets/video/hw_depth_anchor.mp4" type="video/mp4">
-  </video>
-  <div class="cap"><span>hw_depth_anchor.mp4 · 101 s · the procedure: D435 feed → live grid → event feed → BA tiles</span>
-    <span><span class="ev">Observed</span> real drive · <a href="../assets/video/hw_depth_anchor.mp4" download>video ↓</a></span></div>
-</div>
-<figure class="map">
-  <img src="../assets/fig/hw_ba_drive_map.png" alt="Occupancy grid with the RTAB-Map trajectory and the depth-anchored BA camera path">
-  <figcaption>the recorded drive · blue = RTAB-Map trajectory (401 keyframes, 70 loop closures) · orange = depth-anchored BA camera path, 30.7 mm RMS · start = revisit (final gap 2 cm)</figcaption>
-</figure>
-<div class="grid2">
-  <figure>
-    <img src="../assets/fig/hw_ba_ablation.png" alt="4-mode depth-anchored BA ablation on real-robot data">
-    <figcaption>4-mode ablation, second hardware drive, 18,304 observations — anchored keeps 99.7% of measured depth, free 21.0%</figcaption>
-  </figure>
-  <figure>
-    <img src="../assets/fig/hw_ba_depth_cdf.png" alt="Per-observation depth error CDF, depth-anchored vs free BA">
-    <figcaption>per-observation depth error, same 18,304 observations — anchored hugs the 10% line; free trades depth for a 0.04 px reprojection edge</figcaption>
-  </figure>
-</div>
+answers it on hardware</strong> — two real drives through the same pipeline. Median
+claimed-vs-measured gap <strong>0.71 m vs 0.024 m</strong> and <strong>99.7% of measured
+depth kept vs 21.0%</strong> under free BA, at a +0.04 px reprojection cost. The full
+result — the 88 s explainer video, the annotated procedure drive, the trajectory map
+and the 4-mode ablation — has its own page:
+<a href="../depth-anchor/"><strong>Depth-anchored BA →</strong></a></p>
 
 <div class="scope">
   <h3>Honest scope — what this is NOT</h3>
@@ -217,13 +172,9 @@ inset, the growing grid with trail and field-of-view wedge, a live event feed
   <strong>Gazebo simulation</strong> twin of the same pipeline, not hardware.
   The structure-from-motion ablation is likewise <strong>simulation</strong>
   (the twin's p08 mapping drive): RTAB-Map's optimized poses are the reference
-  the two bundle-adjustment solutions are measured against, not a hardware claim.</p>
-  <p>The <strong>depth-anchored BA results are real hardware</strong>, from two drives:
-  the annotated drive (27,755 trimmed observations) and the ablation drive (18,304
-  observations). As in the p08 ablation, <strong>RTAB-Map's optimized poses are the
-  reference</strong> the BA trajectory is measured against — a consistency check against
-  the same SLAM system, not independent ground truth. The trimmed sets cover the earlier
-  part of each drive, so the BA tiles in the video are final numbers, not a live curve.</p>
+  the two bundle-adjustment solutions are measured against, not a hardware claim.
+  The depth-anchored BA hardware results live on their own page, with their own
+  scope block.</p>
 </div>
 
 <div class="pager">
@@ -247,13 +198,15 @@ inset, the growing grid with trail and field-of-view wedge, a live event feed
   <div class="index__inner">
     <div>
       <h2 class="index__word">Ben<br>Thai</h2>
-      <p class="index__tag">Robots that see, move and act. Four builds, recorded end to end.</p>
+      <p class="index__tag">Robots that see, move and act. Six builds, recorded end to end.</p>
     </div>
     <ol class="index__list">
       <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
       <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
       <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
       <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+      <li><a href="../imitation-learning/"><span class="num">05</span> Imitation learning</a></li>
+      <li><a href="../depth-anchor/"><span class="num">06</span> Depth-anchored BA</a></li>
     </ol>
   </div>
   <div class="index__foot">
