@@ -36,7 +36,6 @@
   <a href="#numbers">Numbers</a>
   <a href="#map">Occupancy grid</a>
   <a href="#cloud">Fused cloud</a>
-  <a href="#sim">Gazebo twin</a>
   <a href="#sfm">Depth anchor</a>
   <a href="../depth-anchor/">BA on hardware</a>
   <a href="../reports/03-mobile-robot.html">Technical report</a>
@@ -123,23 +122,8 @@ The spur at lower right was mapped by a targeted corridor drive.</p>
   </figure>
 </div>
 
-<h2 id="sim">The Gazebo twin — full Nav2 in simulation</h2>
-<p class="lead">The ROS 2 Jazzy Gazebo track that mirrors this project's pipeline without
-hardware: the saved SLAM map loaded into <strong>map_server + AMCL</strong>, then
-<strong>Nav2</strong> driving five waypoints through the pillar-field corridors. On screen:
-the occupancy grid, the global plan, the inflation-layered costmaps around every pillar and
-the live goal feedback — <strong>5/5 waypoints reached</strong>, same concepts as the real
-robot, reproducible by anyone with the repo.</p>
-<div class="video-card">
-  <video autoplay muted playsinline loop controls preload="none" poster="../assets/poster/nav2_waypoints.jpg">
-    <source src="../assets/video/nav2_waypoints.mp4" type="video/mp4">
-  </video>
-  <div class="cap"><span>nav2_waypoints.mp4 · 120 s · 1.5× · title card → mission → result</span>
-    <span><span class="ev">SIM</span> mission summary: 5/5 SUCCEEDED</span></div>
-</div>
-
 <h2 id="sfm">Structure from motion — what depth actually buys you</h2>
-<p class="lead">The twin's mapping drive (p08, 376 keyframes) also answers a harder question:
+<p class="lead">A simulated mapping drive (p08, 376 keyframes) answers a harder question:
 <strong>how much of the map do the images recover on their own?</strong> Bundle adjustment fed
 image matches alone — depth used only to <em>initialize</em> the points — converges happily to
 0.35 px while the map silently warps: <strong>shape error 0.25 m, scale 0.78, loop gap 5.1 cm</strong>.
@@ -156,7 +140,7 @@ frame, with the numbers on screen.</p>
 </div>
 
 <h2 id="ba">Depth-anchored BA — on the robot itself</h2>
-<p class="lead">The twin's demo above made the case in simulation; <strong>the robot
+<p class="lead">The simulation above made the case; <strong>the robot
 answers it on hardware</strong> — two real drives through the same pipeline. Median
 claimed-vs-measured gap <strong>0.71 m vs 0.024 m</strong> and <strong>99.7% of measured
 depth kept vs 21.0%</strong> under free BA, at a +0.04 px reprojection cost. The full
@@ -168,10 +152,9 @@ and the 4-mode ablation — has its own page:
   <h3>Honest scope — what this is NOT</h3>
   <p>Numbers are read from the RTAB-Map pose-graph database, not eyeballed —
   <strong>0 collisions across 3 guarded drives</strong>. The map, cloud and Nav2 goal error
-  above are from <strong>real hardware</strong>; the waypoint mission is a
-  <strong>Gazebo simulation</strong> twin of the same pipeline, not hardware.
-  The structure-from-motion ablation is likewise <strong>simulation</strong>
-  (the twin's p08 mapping drive): RTAB-Map's optimized poses are the reference
+  above are from <strong>real hardware</strong>. The structure-from-motion
+  ablation is <strong>simulation</strong> (a Gazebo mapping drive): RTAB-Map's
+  optimized poses are the reference
   the two bundle-adjustment solutions are measured against, not a hardware claim.
   The depth-anchored BA hardware results live on their own page, with their own
   scope block.</p>
@@ -188,7 +171,7 @@ and the 4-mode ablation — has its own page:
     <div><a href="../">← All projects</a> · <a href="../reports/03-mobile-robot.html">Technical report</a> · <a href="https://github.com/BenThaii/mobile-robot-rgbd-slam">GitHub Code ↗</a> · <a href="../robot-arm/">Next: robot arm →</a></div>
   </div>
   <p class="fine">RTAB-Map 0.21.1 · ROS 2 Foxy · Jetson Xavier NX · RealSense D435 (RGB-D,
-  colour-aligned) · RPLiDAR A3 · Nav2 · matching Gazebo track on ROS 2 Jazzy ·
+  colour-aligned) · RPLiDAR A3 · Nav2 · Gazebo sim drive for the SfM ablation (p08) ·
   custom depth-anchored bundle adjustment</p>
 </footer>
 
