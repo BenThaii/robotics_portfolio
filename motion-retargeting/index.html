@@ -80,16 +80,6 @@ frame-synchronised from the same CMU clip.</p>
     <a href="../assets/video/reel.mp4" download>download original ↓</a></div>
 </div>
 
-<h2 id="live">Live loop</h2>
-<p class="lead">A single clip on repeat — human reference on the left, retargeted G1 on the right.</p>
-<div class="video-card">
-  <video id="herovideo" controls muted playsinline loop preload="metadata"
-    poster="../assets/poster/walk_multi.jpg">
-    <source src="../assets/video/walk_multi.mp4" type="video/mp4">
-  </video>
-  <div class="cap"><span>multi-directional walk (CMU 09_12)</span><span>human FK | G1 IK</span></div>
-</div>
-
 <h2 id="compare">Clip-by-clip comparison</h2>
 <p class="lead"><strong>Play both</strong> starts the pair together; expand a row for its
 tracking-error plot <span class="ev">Observed</span>.</p>
@@ -111,8 +101,9 @@ tracking-error plot <span class="ev">Observed</span>.</p>
   <strong>Read the numbers carefully.</strong> The two RMSE columns are
   <strong>not directly comparable</strong> <span class="ev">Documented</span>: Stage 1 IK
   optimises exactly the position error these metrics measure, while GMR is rotation-weighted
-  against its own scaled targets — its advantage here is <strong>visual</strong> (natural arm
-  motion, grounded legs, plausible whole-body poses).
+  against its own scaled targets — its advantage here is <strong>visual</strong> on most clips
+  (natural arm motion, grounded legs, plausible whole-body poses), with the box clip a
+  documented exception below.
   <strong>Attribution:</strong> GMR is <em>Retargeting Matters: General Motion Retargeting for
   Humanoid Motion Tracking</em> (Araújo · Ze · Xu · Wu · Liu, <strong>Stanford University</strong>,
   ICRA 2026, MIT licence) — <strong>external open-source work, used unchanged</strong>;
@@ -137,6 +128,22 @@ tracking-error plot <span class="ev">Observed</span>.</p>
       see the caveat above</td></tr></tfoot>
   </table>
 </div>
+
+<h3 style="margin-top:40px">Inside the GMR reference — where the error sits</h3>
+<p class="lead">The same GMR trajectories, broken out by body part (cm, vs the BVH-derived targets) <span class="ev">Observed</span>.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>clip</th><th>all joints</th><th>wrists</th><th>elbows</th><th>ankles</th><th>pelvis</th></tr></thead>
+    <tbody>
+      <tr><td>box</td><td>18.9</td><td>27.7</td><td>26.8</td><td>7.0</td><td>10.7</td></tr>
+      <tr><td>walk</td><td>16.5</td><td>20.3</td><td>22.6</td><td>10.7</td><td>12.3</td></tr>
+      <tr><td>dance</td><td>17.3</td><td>23.0</td><td>23.7</td><td>4.1</td><td>4.3</td></tr>
+      <tr><td>basketball</td><td>16.2</td><td>23.4</td><td>20.3</td><td>9.7</td><td>5.9</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="6">Left/right pairs averaged · raw per-joint metrics in humanoid-motion-retargeting/output/gmr/</td></tr></tfoot>
+  </table>
+</div>
+<div class="caution"><strong>Box is the weak spot.</strong> Its GMR retarget sits 27.7 cm off at the wrists and 26.8 cm at the elbows, with the arms hanging and spreading instead of holding a boxing guard — 18.9 cm overall against the own-IK clip's 1.7 cm. The 30k RL policy on the <a href="../imitation-learning/#f2">imitation-learning page</a> tracks that reference faithfully; the limitation is the reference, not the policy.</div>
 
 <div class="pager">
   <a href="../depth-anchor/"><small>← Previous project</small>Depth-anchored BA</a>

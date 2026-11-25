@@ -136,23 +136,53 @@ drawtext=fontfile=$FONT:text='neural policy @ 50 Hz, dq=0':fontsize=18:fontcolor
 }
 encode_tri "$IL/box_gmr_3pane.mp4" track_il_box 20
 
-# Hero for the imitation-learning project: the policy pane alone, 16:9.
-encode_hero_il() { # <in>
-  local in="$1" out="$A/video/hero_il.mp4"
+# Hero for the imitation-learning project: one robot pane, 16:9.
+# Default vf = old three-pane capture; the box_gmr 30k call below overrides it.
+encode_hero_il() { # <in> [vf] [poster-t]
+  local in="$1" out="$A/video/hero_il30k.mp4"
+  local vf="${2:-crop=853:480:1706:0,scale=1280:720:flags=lanczos}"
+  local pt="${3:-20}"
   [ -s "$in" ] || { echo "MISSING $in" >&2; return 0; }
   if [ ! -s "$out" ]; then
-    ffmpeg -y -v error -nostdin -i "$in" -vf "crop=853:480:1706:0,\
-scale=1280:720:flags=lanczos" -c:v libx264 -preset medium -crf 26 -an \
-      -movflags +faststart "$out"
-    echo "video: hero_il ($(du -h "$out" | cut -f1))"
+    ffmpeg -y -v error -nostdin -i "$in" -vf "$vf" \
+      -c:v libx264 -preset medium -crf 24 -an -movflags +faststart "$out"
+    echo "video: hero_il30k ($(du -h "$out" | cut -f1))"
   fi
-  if [ ! -s "$A/poster/hero_il.jpg" ]; then
-    ffmpeg -y -v error -nostdin -ss 20 -i "$out" -frames:v 1 -q:v 3 \
-      "$A/poster/hero_il.jpg"
-    echo "poster: hero_il"
+  if [ ! -s "$A/poster/hero_il30k.jpg" ]; then
+    ffmpeg -y -v error -nostdin -ss "$pt" -i "$out" -frames:v 1 -q:v 3 \
+      "$A/poster/hero_il30k.jpg"
+    echo "poster: hero_il30k"
   fi
 }
-encode_hero_il "$IL/box_gmr_3pane.mp4"
+
+# --- GMR-reference 30k RL policy demos (reference | policy, one frame) ------
+# Source: g1-il-tracking/output/videos/*_sbs.mp4 — 1920x1080, 50 fps, 10 s,
+# with labels burned into the top strip. Downscale only; never crop.
+VIDEOS="$(cd "$HOME/ben_robotics/projects/g1-il-tracking/output/videos" 2>/dev/null && pwd || true)"
+if [ -n "$VIDEOS" ]; then
+  while read -r base ss; do
+    [ -z "$base" ] && continue
+    if [ ! -s "$A/video/$base.mp4" ]; then
+      ffmpeg -y -v error -nostdin -i "$VIDEOS/$base.mp4" -vf "scale=1600:-2" \
+        -c:v libx264 -preset medium -crf 24 -an -movflags +faststart \
+        "$A/video/$base.mp4"
+      echo "video: $base ($(du -h "$A/video/$base.mp4" | cut -f1))"
+    fi
+    if [ ! -s "$A/poster/$base.jpg" ]; then
+      ffmpeg -y -v error -nostdin -ss "$ss" -i "$A/video/$base.mp4" \
+        -frames:v 1 -q:v 4 "$A/poster/$base.jpg"
+      echo "poster: $base"
+    fi
+  done <<'SBSDEMOS'
+g1_boxgmr30k_sbs 5
+g1_walkgmr30k_onnx_sbs 5
+SBSDEMOS
+fi
+
+# IL hero: box_gmr 30k policy pane only. The source pane is taller than 16:9,
+# so scale to 720p height and pad the sides instead of cutting off the feet.
+encode_hero_il "$A/video/g1_boxgmr30k_sbs.mp4" \
+  "crop=800:900:800:0,scale=640:720:flags=lanczos,pad=1280:720:320:0:black" 5
 
 # --- Sim-demo captures (experiments/captures-2026-11-15) ---------------------
 # Produced clips already carry title/verdict cards + 1.5x speed, so these are

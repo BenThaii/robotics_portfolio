@@ -20,36 +20,34 @@
     </a>
   </div>
   <div class="nav__links">
-    <a href="#clip">The clip</a>
-    <a href="#pipeline">Pipeline</a>
-    <a href="#ledger">Ledger</a>
+    <a href="#f1">Family 01 · teacher distillation</a>
+    <a href="#f2">Family 02 · motion RL</a>
     <a href="../depth-anchor/">Next →</a>
   </div>
   <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
 </nav>
 <div class="nav__menu" id="navmenu">
   <a href="../">← All projects</a>
-  <a href="#clip">The clip</a>
-  <a href="#pipeline">The pipeline</a>
-  <a href="#ledger">Learning ledger</a>
+  <a href="#f1">Family 01 — teacher distillation</a>
+  <a href="#f2">Family 02 — motion RL</a>
   <a href="../depth-anchor/">Next project →</a>
 </div>
 
-<section class="hero hero--stage">
+<section class="hero hero--open">
   <div class="hero__media">
-    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/hero_il.jpg">
-      <source src="../assets/video/hero_il.mp4" type="video/mp4">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/hero_boxgmr30k.jpg">
+      <source src="../assets/video/hero_boxgmr30k.mp4" type="video/mp4">
     </video>
   </div>
   <div class="hero__scrim"></div>
   <div class="hero__content">
     <p class="hero__kicker">05 / Simulation · MuJoCo + PyTorch</p>
     <h1 class="hero__title">A learned policy that tracks like the controller.</h1>
-    <p class="hero__desc">The G1 box lift, 46.6 s, driven by a 473k-parameter network at 50 Hz —
-    measured against the 500 Hz torque-PD teacher that also generated its data.</p>
+    <p class="hero__desc">Footage: the box_gmr 30k RL policy — it plants its feet
+    more cleanly than the reference it tracks.</p>
     <div class="hero__result">
       <span class="n">0.243 rad</span>
-      <span class="l">policy RMSE vs 0.245 teacher · 1399/1399 frames · never falls</span>
+      <span class="l">policy RMSE vs 0.245 teacher · never falls</span>
       <span class="e">Observed</span>
     </div>
   </div>
@@ -61,16 +59,27 @@
 <div class="wrap">
 
 <div class="legend">
-  <span class="badge">policy <b>0.243 rad</b> vs teacher <b>0.245</b> · box <span class="ev">Observed</span></span>
-  <span class="badge">every clip to the end · <b>0 falls</b>, held-out included <span class="ev">Observed</span></span>
-  <span class="badge">ONNX <b>1.85 MB</b> · <b>0.062 ms</b> per inference <span class="ev">Observed</span></span>
-  <span class="badge"><b>0–60 ms</b> action latency: no RMSE cost <span class="ev">Observed</span></span>
+  <span class="badge">policy <b>0.243 rad</b> vs teacher <b>0.245</b> <span class="ev">Observed</span></span>
+  <span class="badge">every clip to the end · <b>0 falls</b> <span class="ev">Observed</span></span>
+  <span class="badge">ONNX · <b>0.062 ms</b> per inference <span class="ev">Observed</span></span>
+  <span class="badge">30k policies · box <b>32/32</b> spawns <span class="ev">Observed</span></span>
 </div>
 
-<h2 id="clip" class="first">Three panes, one clock</h2>
+<h2 id="families" class="first">Two families of imitation learning</h2>
+<p class="lead">Same robot, same retargeted motions — two different things to imitate.</p>
+<div class="grid2">
+  <div class="card"><div class="n">01</div><h3>Distill the controller</h3>
+    <p>BC, DAgger and PPO distill a 500 Hz torque-PD teacher into a 50 Hz position head.
+    The teacher is the label — the shipped dq=0 policy tracks it at 0.243 vs 0.245 rad.</p></div>
+  <div class="card"><div class="n">02</div><h3>Track the motion with RL</h3>
+    <p>BeyondMimic-recipe PPO at vendor scale trains free-base policies directly on the
+    retargeted reference — no teacher in the loop. Box 30k survives 32/32 randomized spawns.</p></div>
+</div>
+
+<h2 id="f1">Family 01 — Distilling the 500 Hz teacher</h2>
 <p class="lead">Gray replays the GMR reference, blue is the 500 Hz torque-PD teacher, rust is the
 50 Hz policy at dq=0 — same scene, same camera, same metric function, every frame.</p>
-<div class="video-card tri">
+<div class="video-card tri" id="clip">
   <video autoplay muted playsinline loop controls preload="metadata" poster="../assets/poster/track_il_box.jpg">
     <source src="../assets/video/track_il_box.mp4" type="video/mp4">
   </video>
@@ -78,7 +87,7 @@
     <span>0.243 vs 0.245 rad · 1399/1399 frames</span></div>
 </div>
 
-<h2 id="pipeline">From teacher rollouts to a deployable interface</h2>
+<h3 id="pipeline">From teacher rollouts to a deployable interface</h3>
 <p class="lead">The policy does not replace the physics stack — it sits on top of it: a 50 Hz
 head over the same 500 Hz torque loop.</p>
 <div class="grid2">
@@ -96,36 +105,82 @@ head over the same 500 Hz torque loop.</p>
     single-observation inference on CPU — 322× inside the 20 ms budget.</p></div>
 </div>
 
-<h2 id="ledger">The learning ledger — negative results, kept</h2>
-<p class="lead">Training was measured, not assumed. Every attempt is reported with its number,
-and the box clip is the comparison point.</p>
+<h3 id="ledger">The learning ledger</h3>
+<p class="lead">Every attempt reported with its number — the shipped policy is the comparison point.</p>
 <div class="tablewrap">
   <table>
     <thead><tr><th>method</th><th>interface</th><th>box-clip result</th><th>verdict</th></tr></thead>
     <tbody>
       <tr><td>Torque BC + DAgger</td><td>50 Hz torque</td><td>falls — off-teacher labels MSE 6.4</td><td>rejected</td></tr>
       <tr><td>Pure BC · 10.4k demos</td><td>50 Hz torque</td><td>falls within 0.5–2.6 s, every clip</td><td>rejected</td></tr>
-      <tr><td>PPO on dq residuals</td><td>50 Hz position</td><td>0.1741 final (best 0.1609) vs 0.1486 start</td><td>rejected</td></tr>
-      <tr><td>dq=0 policy</td><td>50 Hz position</td><td>0.1486 IK / 0.2428 GMR · no falls</td><td>shipped</td></tr>
+      <tr><td>PPO on dq residuals</td><td>50 Hz position</td><td>0.1741 final (best 0.1609) · never beat its starting policy</td><td>rejected</td></tr>
+      <tr><td>dq=0 policy</td><td>50 Hz position</td><td>0.2428 · no falls</td><td>shipped</td></tr>
     </tbody>
     <tfoot><tr><td colspan="4">Joint RMSE through the same metric function used for the teacher · simulation only</td></tr></tfoot>
   </table>
 </div>
 <p class="lead" style="margin-top:24px">Nobody falls anywhere in the robustness grid — mass ±20%,
-floor friction 0.7–1.3, motor strength ±10%, sensor noise ×4 — and every push up to 500 N is
-recovered by teacher, dq=0 and the PPO student alike. The pelvis assist dominates; that is the
-honest reading.</p>
+floor friction 0.7–1.3, motor strength ±10%, sensor noise ×4, pushes to 500 N.</p>
 
-<div class="caution"><strong>Why the residual has nothing to learn:</strong> the PD head already
-is the controller, and the assist already balances. A joint-level residual is not the missing
-piece of this stack.</div>
-
-<div class="scope">
-  <h3>Honest scope — what this is NOT</h3>
-  <p><strong>Simulation only</strong> — no hardware in the loop and no sim-to-real claim. The free
-  base still falls at 0.43 s without the pelvis assist: the assist is doing the balancing, not the
-  network. Joint RMSE is the only claim here; task success is not measured.</p>
+<h3>The shipped policy, zero-shot on every GMR reference</h3>
+<p class="lead">The dq=0 policy, measured without retraining on each reference <span class="ev">Observed</span> —
+full clips, every frame to the end, no falls.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>clip · GMR reference</th><th>teacher PD 500 Hz</th><th>50 Hz policy · dq=0</th></tr></thead>
+    <tbody>
+      <tr><td>box · 46.6 s</td><td>0.2451 rad</td><td><b>0.2428 rad</b></td></tr>
+      <tr><td>walk · 22.9 s</td><td>0.1948</td><td><b>0.1909</b></td></tr>
+      <tr><td>dance · 2.7 s</td><td>0.0999</td><td><b>0.0949</b></td></tr>
+      <tr><td>basketball · 38.3 s (held out)</td><td>0.2604</td><td><b>0.2563</b></td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="3">Joint RMSE through the same metric function · simulation only</td></tr></tfoot>
+  </table>
 </div>
+<p class="lead" style="margin-top:24px">On every GMR reference the policy stays within roughly
+1–2% of its teacher.</p>
+
+<h2 id="f2">Family 02 — Tracking the motion with RL</h2>
+<p class="lead">No teacher in the loop: BeyondMimic-recipe RL at vendor scale, no pelvis assist —
+free-base policies trained directly on the retargeted reference, exported to ONNX.
+Reference left, policy right <span class="ev">Observed</span>.</p>
+<div class="grid2">
+  <div>
+    <h3>Box · GMR reference · 30k</h3>
+    <div class="video-card">
+      <video controls muted playsinline loop preload="metadata" poster="../assets/poster/g1_boxgmr30k_sbs.jpg">
+        <source src="../assets/video/g1_boxgmr30k_sbs.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><span>g1_boxgmr30k_sbs.mp4 · 10 s · 50 fps · reference | policy · simulation</span><span>32/32 spawns · 16/16 windows</span></div>
+    </div>
+  </div>
+  <div>
+    <h3>Walk · GMR reference · 30k ONNX artifact</h3>
+    <div class="video-card">
+      <video controls muted playsinline loop preload="metadata" poster="../assets/poster/g1_walkgmr30k_onnx_sbs.jpg">
+        <source src="../assets/video/g1_walkgmr30k_onnx_sbs.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><span>g1_walkgmr30k_onnx_sbs.mp4 · 10 s · 50 fps · reference | ONNX policy · simulation</span><span>12/16 spawns · 16/16 windows</span></div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:40px">What the 30k runs measured</h3>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>policy · GMR reference</th><th>randomized spawns</th><th>uniform 10 s windows</th><th>per-joint RMSE · uniform</th></tr></thead>
+    <tbody>
+      <tr><td>box_gmr 30k · torch</td><td>32/32 survived</td><td>16/16</td><td>—</td></tr>
+      <tr><td>box_gmr 30k · ONNX</td><td>32/32 survived</td><td>16/16</td><td>0.122 rad</td></tr>
+      <tr><td>walk_gmr 30k · torch</td><td>15/16 survived</td><td>16/16</td><td>—</td></tr>
+      <tr><td>walk_gmr 30k · ONNX (video above)</td><td>12/16 survived</td><td>16/16</td><td>0.115 rad</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="4">No domain randomization · 10 s windows across each motion · ONNX graph parity vs torch: 1.1–1.4e-5</td></tr></tfoot>
+  </table>
+</div>
+
+<div class="caution"><strong>Constraints:</strong> one policy per motion — cross-pipeline pairing
+scores 0% · the loop must hold ≤ 20 ms (40 ms = 0% survival in sim).</div>
 
 <div class="pager">
   <a href="../robot-arm/"><small>← Previous project</small>Robot-arm manipulation</a>
