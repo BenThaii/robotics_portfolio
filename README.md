@@ -1,6 +1,6 @@
 # Robotics Portfolio
 
-A static portfolio site presenting five robotics builds, with recorded video
+A static portfolio site presenting seven robotics builds, with recorded video
 evidence for every reported result.
 
 ## What's here
@@ -12,6 +12,8 @@ evidence for every reported result.
 | `mobile-robot/` | RTAB-Map RGB-D SLAM and Nav2 navigation on a real mobile base |
 | `robot-arm/` | A MoveIt 2 pick-and-place stack in simulation |
 | `imitation-learning/` | A 50 Hz neural policy distilled from the 500 Hz tracking teacher, with the full BC/PPO ledger |
+| `depth-anchor/` | Depth-anchored bundle adjustment that keeps the SLAM map metric |
+| `siu-jump/` | A generated run-up stitched to a retargeted human SIU jump-turn, tracked by one warm-started policy on a 22-DoF Mini Pi Plus |
 
 `assets/` holds the web-encoded videos, poster frames, plots and figures.
 `build_assets.sh` rebuilds them from the project outputs.
@@ -37,6 +39,10 @@ Pages from running the Jekyll build step over the static files.
 ## Attribution
 
 Motion data: CMU Graphics Lab motion capture database. Robot model: Unitree G1.
+
+The SIU jump page uses a human celebration clip from AMASS accessed through the
+ASAP repo (LeCAR-Lab), retargeted with GMR; the run-up approach is generated
+from an AMP free-base rollout, not motion capture. Robot model: Mini Pi Plus.
 
 GMR is external open-source work — *Retargeting Matters: General Motion
 Retargeting for Humanoid Motion Tracking* (Araújo, Ze, Xu, Wu, Liu; Stanford

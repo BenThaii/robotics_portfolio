@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ben Thai — SIU Jump · Run-up, brake, jump-turn, land on Mini Pi Plus</title>
+<meta name="description" content="One continuous rollout on a 22-DoF humanoid: a generated 1.2 m run-up stitched to a retargeted human SIU jump-turn, tracked by a single warm-started PPO policy — 48/48 standing-start trials, ONNX-exported. Simulation only.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='3' y='3' width='5' height='5' fill='%23fff'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary">
+  <div class="nav__left">
+    <a class="nav__back" href="../">← All projects</a>
+    <span class="nav__sep"></span>
+    <a class="nav__brand" href="../">
+      <svg class="nav__mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="0" y="0" width="8" height="8"/><rect x="10" y="0" width="4" height="4"/><rect x="10" y="6" width="10" height="8"/><rect x="0" y="10" width="8" height="6"/></svg>
+      SIU jump
+    </a>
+  </div>
+  <div class="nav__links">
+    <a href="#motion">The motion</a>
+    <a href="#generation">Trajectory generation</a>
+    <a href="#ledger">Learning ledger</a>
+    <a href="../motion-retargeting/">Next →</a>
+  </div>
+  <button class="nav__toggle" aria-label="Open menu" aria-expanded="false"><span></span></button>
+</nav>
+<div class="nav__menu" id="navmenu">
+  <a href="../">← All projects</a>
+  <a href="#motion">The motion</a>
+  <a href="#generation">Trajectory generation</a>
+  <a href="#ledger">Learning ledger</a>
+  <a href="../motion-retargeting/">Next project →</a>
+</div>
+
+<section class="hero hero--open">
+  <div class="hero__media">
+    <video muted loop playsinline autoplay preload="metadata" poster="../assets/poster/siu_policy.jpg">
+      <source src="../assets/video/siu_policy.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__content">
+    <p class="hero__kicker">07 / Simulation · MuJoCo + PyTorch · Mini Pi Plus</p>
+    <h1 class="hero__title">Run up, brake, jump, turn 180°, land.</h1>
+    <p class="hero__desc">Footage: one continuous 5.8 s rollout of the shipped policy —
+    the run-up comes from a generated trajectory, the jump-turn from a retargeted human
+    celebration, both tracked by one learned policy.</p>
+    <div class="hero__result">
+      <span class="n">48/48</span>
+      <span class="l">standing-start trials · seeds 71/72/73 · full sequence</span>
+      <span class="e">Observed</span>
+    </div>
+  </div>
+  <a class="hero__cta" href="#motion">See reference and policy side by side
+    <svg viewBox="0 0 12 13" fill="none" aria-hidden="true"><path d="M0.75 11.75L11.25 1.25M11.25 1.25H0.75M11.25 1.25V11.75" stroke-width="1.2"/></svg>
+  </a>
+</section>
+
+<div class="wrap">
+
+<div class="legend">
+  <span class="badge">48/48 trials · <b>3 seeds</b> incl. held-out 73 <span class="ev">Observed</span></span>
+  <span class="badge">approach <b>1.25 m</b> vs 1.21 m reference <span class="ev">Observed</span></span>
+  <span class="badge">flight <b>0.22 s</b> · air yaw <b>69°</b> <span class="ev">Observed</span></span>
+  <span class="badge">ONNX parity <b>2.1e-6</b> vs torch <span class="ev">Observed</span></span>
+</div>
+
+<h2 id="motion" class="first">One reference, one policy, one take</h2>
+<p class="lead">Left: the generated 5.78 s reference — run, brake into a crouch, jump-turn,
+land and hold. Right: the learned policy from a standing start. Same clock, same camera
+<span class="ev">Observed</span>.</p>
+<div class="grid2">
+  <div>
+    <h3>Generated reference</h3>
+    <div class="video-card">
+      <video controls muted playsinline loop preload="metadata" poster="../assets/poster/siu_reference.jpg">
+        <source src="../assets/video/siu_reference.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><span>siu_reference.mp4 · 5.8 s · pose preview · simulation</span>
+        <span>290 frames · 179.1° target turn</span></div>
+    </div>
+  </div>
+  <div>
+    <h3>Learned policy · standing start</h3>
+    <div class="video-card">
+      <video controls muted playsinline loop preload="metadata" poster="../assets/poster/siu_policy.jpg">
+        <source src="../assets/video/siu_policy.mp4" type="video/mp4">
+      </video>
+      <div class="cap"><span>siu_policy.mp4 · 5.8 s · best of 16 trials, seed 73 · simulation</span>
+        <span>16/16 trials passed on this seed</span></div>
+    </div>
+  </div>
+</div>
+
+<p class="lead" style="margin-top:24px">Measured on the shipped checkpoint across all 48 trials
+<span class="ev">Observed</span>: approach 1.25 m at 1.40 m/s peak (reference 1.21 m, 1.37 m/s),
+crouch to 0.343 m root height, flight 0.22 s with 69° of the turn airborne, total yaw 177–183°,
+finish tilt 4.1°, hold drift 6 mm over the final 0.30 s. No non-foot floor contact in any trial.</p>
+
+<h2 id="generation">Trajectory generation: three stitched pieces</h2>
+<p class="lead">The robot had no motion capture of a running approach into a jump — the reference
+had to be built. Three sources, one stitched clip, and machine-checkable gates.</p>
+<div class="grid2">
+  <div class="card"><div class="n">01</div><h3>The jump — retargeted human motion</h3>
+    <p>A human SIU-celebration clip (AMASS, via the ASAP repo) retargeted to the 22-joint
+    Mini Pi Plus with GMR, plus a stance-floor adjustment so the takeoff foot meets the
+    ground where the robot's foot actually is.</p></div>
+  <div class="card"><div class="n">02</div><h3>The run-up — generated, not captured</h3>
+    <p>The celebration clip has no run-in, so the 2.0 s approach was generated from a
+    free-base AMP rollout in MuJoCo and retargeted onto the robot: 1.211 m of travel at a
+    1.374 m/s peak, first footfalls 0.10 s and 0.06 s in.</p></div>
+  <div class="card"><div class="n">03</div><h3>The bridge — braking into the crouch</h3>
+    <p>A 0.38 s transition stitches run speed into the crouch takeoff, optimized so the
+    join never penetrates the floor — worst contact 3.6 mm deep across the bridge.</p></div>
+  <div class="card"><div class="n">04</div><h3>The gates — a phase protocol</h3>
+    <p>The reference ships with measurable pass conditions: ≥0.75 m approach at ≥0.7 m/s
+    by frame 100, jump judged in a 2.54–4.09 s window, airborne turn ≥35°, stable finish.
+    Evaluator and training enforce the same gates.</p></div>
+</div>
+
+<h3 id="ledger" style="margin-top:40px">The learning ledger</h3>
+<p class="lead">Warm-start chaining: a policy first trained on the in-place jump, then continued
+on the combined motion — 900 PPO iterations, 1536 environments, reward 53 → 68. Every stage
+reported with its number.</p>
+<div class="tablewrap">
+  <table>
+    <thead><tr><th>stage · checkpoint</th><th>new iterations</th><th>combined-motion result</th><th>verdict</th></tr></thead>
+    <tbody>
+      <tr><td>standing-SIU policy, unadapted</td><td>0</td><td>falls at frame 69 · approach 0.50 m · tilt 67°</td><td>rejected</td></tr>
+      <tr><td>model_800</td><td>+50</td><td>1–2 of 16 · finishes upright but under-runs (0.69 m &lt; 0.75 m gate)</td><td>rejected</td></tr>
+      <tr><td>model_1200</td><td>+450</td><td>16/16 · approach saturates</td><td>kept</td></tr>
+      <tr><td>model_1400</td><td>+650</td><td>16/16</td><td>kept</td></tr>
+      <tr><td>model_1648 · shipped</td><td>+900</td><td>16/16 on all three seeds · best finish tilt (4.1°) and joint RMSE</td><td>shipped</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="4">16 standing-start trials per seed · seeds 71/72 for selection, 73 held out · joint RMSE ~0.12–0.13 rad · simulation only</td></tr></tfoot>
+  </table>
+</div>
+
+<p class="lead" style="margin-top:24px">The recurring early failure mode is visible in the
+ledger: not falling — <em>under-running</em>. Braking too early still lands upright, which is
+why the pass gate is the approach distance, not survival.</p>
+
+<h3 id="export">Exported artifact</h3>
+<div class="grid2">
+  <div class="card"><div class="n">05</div><h3>ONNX</h3>
+    <p>340 KB graph exported from the shipped checkpoint. Runtime parity against PyTorch:
+    max action difference 2.1e-6 across a full 16-trial evaluation, which itself passes
+    16/16 on seed 72 through the same phase gates.</p></div>
+  <div class="card"><div class="n">06</div><h3>What is measured vs not</h3>
+    <p>All numbers above are observed in free-base MuJoCo at default conditions
+    (friction 0.6). Reduced-friction and push robustness are unmeasured for this policy,
+    and nothing here has run on hardware.</p></div>
+</div>
+
+<div class="caution"><strong>Constraints:</strong> simulation only — no hardware deployment ·
+one policy per motion, trained by warm-start chaining from the standing-SIU checkpoint ·
+robustness beyond default contact conditions not yet characterized.</div>
+
+<div class="pager">
+  <a href="../depth-anchor/"><small>← Previous project</small>Depth-anchored BA</a>
+  <a href="../motion-retargeting/"><small>Next project →</small>Motion retargeting</a>
+</div>
+
+<footer>
+  <div class="cols">
+    <div>Ben Thai · robotics portfolio · 2026</div>
+    <div><a href="../">← All projects</a> · <a href="../depth-anchor/">Previous: depth-anchored BA →</a> · <a href="../motion-retargeting/">Next: motion retargeting →</a></div>
+  </div>
+  <p class="fine">Mini Pi Plus (22 DoF) · MuJoCo · PyTorch · GMR · AMP · ONNX Runtime</p>
+</footer>
+
+</div>
+
+<footer class="index" id="index">
+  <div class="index__inner">
+    <div>
+      <h2 class="index__word">Ben<br>Thai</h2>
+      <p class="index__tag">Robots that see, move and act. Seven builds, recorded end to end.</p>
+    </div>
+    <ol class="index__list">
+      <li><a href="../motion-retargeting/"><span class="num">01</span> Motion retargeting</a></li>
+      <li><a href="../motion-physics/"><span class="num">02</span> Motion + physics</a></li>
+      <li><a href="../mobile-robot/"><span class="num">03</span> RGB-D SLAM &amp; navigation</a></li>
+      <li><a href="../robot-arm/"><span class="num">04</span> Robot-arm manipulation</a></li>
+      <li><a href="../imitation-learning/"><span class="num">05</span> Imitation learning</a></li>
+      <li><a href="../depth-anchor/"><span class="num">06</span> Depth-anchored BA</a></li>
+      <li><a href="../siu-jump/"><span class="num">07</span> SIU jump</a></li>
+    </ol>
+  </div>
+  <div class="index__foot">
+    <span>© Ben Thai 2026</span>
+    <span>All media recorded from the builds themselves</span>
+    <span>Simulation and real hardware labelled throughout</span>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>
